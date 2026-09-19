@@ -46,6 +46,13 @@ function shade(rgbStr: string, f: number): string {
   return `rgb(${m.map(v => Math.round(Number(v) * f)).join(',')})`;
 }
 
+const WEIGHT_DETAILS: Record<string, { label: string; desc: string }> = {
+  chain: { label: 'chain fit', desc: '7-day survival baseline & DEX liquidity depth across the chain' },
+  venue: { label: 'venue fit', desc: 'Bonding curve mechanics, graduation rate & initial liquidity' },
+  meta: { label: 'meta heat', desc: 'Taxonomy demand score (AI agent, meme, DeFi, game, RWA)' },
+  hour: { label: 'hour window', desc: 'Diurnal UTC liquidity peak & bot extraction avoidance' }
+};
+
 export default function HomePage() {
   const [description, setDescription] = useState('');
   const [report, setReport] = useState<AnalyseResponseBody | null>(null);
@@ -53,33 +60,60 @@ export default function HomePage() {
 
   // Matrix Heatmap state
   const [metric, setMetric] = useState<MetricType>('survival');
+  const [matrixGrid, setMatrixGrid] = useState<Record<string, Record<MetricType, (number | null)[]>>>(MATRIX_DATA);
   const [selectedCell, setSelectedCell] = useState<{ k: string; h: number } | null>(null);
   const [flashCell, setFlashCell] = useState<{ k: string; h: number } | null>(null);
   const [lastUpdatedSec, setLastUpdatedSec] = useState(0);
 
   // Venue Table State connected to live PostgreSQL DB
-  const [venuesList, setVenuesList] = useState(VENUES);
+  const [venuesList, setVenuesList] = useState<Array<typeof VENUES[0] & { curveType?: string }>>(
+    VENUES.map(v => ({
+      ...v,
+      curveType: v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding_curve'
+    }))
+  );
   const [sortKey, setSortKey] = useState<keyof typeof VENUES[0]>('surv');
   const [sortDir, setSortDir] = useState<-1 | 1>(-1);
 
-  // Fetch live venues from PostgreSQL DB endpoint /v1/venues
+  // Fetch live venues and live matrix data from PostgreSQL DB
   useEffect(() => {
     fetch('/v1/venues')
       .then(res => res.json())
       .then(json => {
         if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-          const mapped = json.data.map((v: { name: string; chain: string; launches_count: number; avg_initial_liquidity_usd: number; extraction_pct: number; survival_rate_pct: number }) => ({
+          const mapped = json.data.map((v: { name: string; chain: string; launches_count: number; avg_initial_liquidity_usd: number; extraction_pct: number; survival_rate_pct: number; curve_type?: string }) => ({
             name: v.name,
             chain: v.chain === 'sol' ? 'Solana' : (v.chain === 'base' ? 'Base' : (v.chain === 'bnb' ? 'BNB Chain' : (v.chain === 'rh' ? 'Robinhood' : 'Arc'))),
             perday: v.launches_count || 20,
             liq: v.avg_initial_liquidity_usd || 4500,
             extract: v.extraction_pct || 38,
-            surv: v.survival_rate_pct || 45
+            surv: v.survival_rate_pct || 45,
+            curveType: v.curve_type || (v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding_curve')
           }));
           setVenuesList(mapped);
         }
       })
       .catch(err => console.warn('[HomePage] Failed to fetch live venues from DB:', err));
+
+    // Fetch matrix data for all 5 chains
+    const chainKeys = ['sol', 'base', 'bnb', 'rh', 'arc'];
+    chainKeys.forEach(ck => {
+      fetch(`/v1/hours?chain=${ck}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json?.metrics) {
+            setMatrixGrid(prev => ({
+              ...prev,
+              [ck]: {
+                survival: json.metrics.survival || prev[ck]?.survival || [],
+                launches: json.metrics.launches || prev[ck]?.launches || [],
+                extraction: json.metrics.extraction || prev[ck]?.extraction || []
+              }
+            }));
+          }
+        })
+        .catch(err => console.warn(`[HomePage] Failed to fetch hourly metrics for ${ck}:`, err));
+    });
   }, []);
 
   // Dynamic Live Ticking effect
@@ -89,10 +123,21 @@ export default function HomePage() {
       const randomChain = liveChains[Math.floor(Math.random() * liveChains.length)];
       const randomHour = Math.floor(Math.random() * 24);
 
-      if (MATRIX_DATA[randomChain.key]?.[metric]?.[randomHour] != null) {
-        const cur = MATRIX_DATA[randomChain.key][metric][randomHour] as number;
-        MATRIX_DATA[randomChain.key][metric][randomHour] = cur * (1 + (Math.random() - 0.5) * 0.05);
-      }
+      setMatrixGrid(prev => {
+        const chainData = prev[randomChain.key];
+        if (!chainData || !chainData[metric] || chainData[metric][randomHour] == null) return prev;
+        const cur = chainData[metric][randomHour] as number;
+        const updatedHourVal = cur * (1 + (Math.random() - 0.5) * 0.04);
+        const updatedArr = [...chainData[metric]];
+        updatedArr[randomHour] = updatedHourVal;
+        return {
+          ...prev,
+          [randomChain.key]: {
+            ...chainData,
+            [metric]: updatedArr
+          }
+        };
+      });
 
       setFlashCell({ k: randomChain.key, h: randomHour });
       setLastUpdatedSec(0);
@@ -114,7 +159,7 @@ export default function HomePage() {
     let lo = Infinity;
     let hi = -Infinity;
     CHAINS.forEach(c => {
-      const arr = MATRIX_DATA[c.key]?.[m];
+      const arr = matrixGrid[c.key]?.[m];
       if (!arr) return;
       arr.forEach(v => {
         if (v == null) return;
@@ -164,8 +209,8 @@ export default function HomePage() {
     ? CHAINS.find(c => c.key === selectedCell.k)
     : undefined;
 
-  const selectedVal: number | null = (selectedCell && selectedChainData && MATRIX_DATA[selectedCell.k]?.[metric])
-    ? MATRIX_DATA[selectedCell.k][metric][selectedCell.h]
+  const selectedVal: number | null = (selectedCell && selectedChainData && matrixGrid[selectedCell.k]?.[metric])
+    ? matrixGrid[selectedCell.k][metric][selectedCell.h]
     : null;
 
   let cellReadout = "";
@@ -347,7 +392,7 @@ export default function HomePage() {
       {/* Matrix Section */}
       <section id="hours">
         <div className="eyebrow">chain by hour</div>
-        <h2>The good hours are not the same on every chain</h2>
+        <h2>The good hours are <em>not the same</em> on every chain</h2>
         <p className="lede">
           Rows are chains, columns are launch hours in UTC. A finding from one chain does not transfer to the next, which is why this is a matrix rather than a single number.
         </p>
@@ -385,7 +430,7 @@ export default function HomePage() {
                   <span>{c.name}</span>
                 </div>
                 {Array.from({ length: 24 }, (_, h) => {
-                  const val = MATRIX_DATA[c.key]?.[metric]?.[h] ?? null;
+                  const val = matrixGrid[c.key]?.[metric]?.[h] ?? null;
                   const isSel = selectedCell?.k === c.key && selectedCell?.h === h;
                   const isFlash = flashCell?.k === c.key && flashCell?.h === h;
 
@@ -415,26 +460,31 @@ export default function HomePage() {
           </div>
 
           <div className="xaxis">
-            <span></span>
+            <span className="xoffset"></span>
             {Array.from({ length: 24 }, (_, h) => (
               <span key={h}>{h % 3 === 0 ? String(h).padStart(2, '0') : ''}</span>
             ))}
           </div>
+
+          <div className="xtitle-row">
+            <span className="xoffset"></span>
+            <div className="xtitle">launch hour, UTC</div>
+          </div>
         </div>
 
-        <div className="xtitle">launch hour, UTC</div>
-
-        <div className="cbar">
-          <span>{METRICS[metric].dir === 'low' ? METRICS[metric].fmt(hi) : METRICS[metric].fmt(lo)}</span>
-          <div
-            className="cramp"
-            style={{
-              background: `linear-gradient(to right, ${Array.from({ length: 12 }, (_, i) =>
-                ramp(i / 11)
-              ).join(',')})`
-            }}
-          ></div>
-          <span>{METRICS[metric].dir === 'low' ? METRICS[metric].fmt(lo) : METRICS[metric].fmt(hi)}</span>
+        <div className="cbar-wrapper">
+          <div className="cbar">
+            <span className="cbar-val">{METRICS[metric].dir === 'low' ? METRICS[metric].fmt(hi) : METRICS[metric].fmt(lo)}</span>
+            <div
+              className="cramp"
+              style={{
+                background: `linear-gradient(to right, ${Array.from({ length: 16 }, (_, i) =>
+                  ramp(i / 15)
+                ).join(',')})`
+              }}
+            ></div>
+            <span className="cbar-val">{METRICS[metric].dir === 'low' ? METRICS[metric].fmt(lo) : METRICS[metric].fmt(hi)}</span>
+          </div>
         </div>
 
         <p className="note">
@@ -476,11 +526,11 @@ export default function HomePage() {
       {/* Venues Table Section */}
       <section id="venues">
         <div className="eyebrow">launchpads</div>
-        <h2>The comparison that does not exist in public</h2>
+        <h2>The comparison that <em>does not exist</em> in public</h2>
         <p className="lede">
           Every venue on one scale, with the number that matters most last: how many of its launches are still trading a week later. Tap a column heading to sort.
         </p>
-        <p className="note" style={{ marginTop: 0 }}>
+        <p className="note table-scroll-hint" style={{ marginTop: 0 }}>
           Scroll sideways for the full table.
         </p>
 
@@ -498,7 +548,7 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'name' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  venue {sortKey === 'name' ? (sortDir === -1 ? '↓' : '↑') : ''}
+                  venue {sortKey === 'name' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
                 </th>
                 <th
                   onClick={() => {
@@ -510,7 +560,7 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'chain' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  chain {sortKey === 'chain' ? (sortDir === -1 ? '↓' : '↑') : ''}
+                  chain {sortKey === 'chain' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
                 </th>
                 <th
                   className="num"
@@ -523,7 +573,7 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'perday' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  launches per day {sortKey === 'perday' ? (sortDir === -1 ? '↓' : '↑') : ''}
+                  launches per day {sortKey === 'perday' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
                 </th>
                 <th
                   className="num"
@@ -536,7 +586,7 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'liq' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  median launch liquidity {sortKey === 'liq' ? (sortDir === -1 ? '↓' : '↑') : ''}
+                  median launch liquidity {sortKey === 'liq' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
                 </th>
                 <th
                   className="num"
@@ -549,7 +599,7 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'extract' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  first minute extraction {sortKey === 'extract' ? (sortDir === -1 ? '↓' : '↑') : ''}
+                  first minute extraction {sortKey === 'extract' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
                 </th>
                 <th
                   className="num"
@@ -562,51 +612,74 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'surv' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  alive after 7 days {sortKey === 'surv' ? (sortDir === -1 ? '↓' : '↑') : ''}
+                  alive after 7 days {sortKey === 'surv' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {sortedVenues.map(v => {
+              {sortedVenues.map((v, index) => {
                 const chainData = CHAINS.find(
                   c => c.key === v.chain || c.name === v.chain || c.key === v.chain?.toLowerCase()
                 );
+                const isTop1 = sortKey === 'surv' && index === 0;
+                const survPct = Math.min(100, Math.max(12, (v.surv / Math.max(65, maxSurv)) * 100));
+
                 return (
-                  <tr key={v.name}>
+                  <tr key={v.name} className={isTop1 ? 'row-lead' : ''}>
                     <td>
-                      <span className="vname">
-                        <i className="vchip" style={{ background: chainData?.hue || '#7b45d8' }}></i>
-                        {v.name}
-                      </span>
+                      <div className="vname-group">
+                        <div className="vname-header">
+                          <i className="vchip" style={{ background: chainData?.hue || 'var(--navy-900)' }}></i>
+                          <span className="vname-text">{v.name}</span>
+                          {isTop1 && <span className="top-badge">Top Survival</span>}
+                        </div>
+                        <span className="vcurve-badge">
+                          {(v.curveType || (v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding curve')).replace('_', ' ')}
+                        </span>
+                      </div>
                     </td>
                     <td>
                       {chainData ? (
-                        <span className="chain-badge">
+                        <span
+                          className="chain-badge"
+                          style={{
+                            borderColor: `${chainData.hue}33`,
+                            background: `${chainData.hue}0D`
+                          }}
+                        >
                           <i className="vchip" style={{ background: chainData.hue }}></i>
-                          {chainData.name}
+                          <span>{chainData.name}</span>
                         </span>
                       ) : (
                         <span style={{ color: 'var(--dim)' }}>{v.chain}</span>
                       )}
                     </td>
-                    <td className="num">{v.perday.toLocaleString()}</td>
-                    <td className="num">${v.liq.toLocaleString()}</td>
-                    <td className="num" style={{ color: shade(ramp(1 - (v.extract - 35) / 45), 0.62) }}>
-                      {v.extract}%
+                    <td className="num">
+                      <span className="perday-val">{v.perday.toLocaleString()}</span>
+                      <span className="perday-sub">launches / day</span>
                     </td>
                     <td className="num">
-                      <span className="minibar">
-                        <span className="t">
-                          <span
-                            className="f"
-                            style={{
-                              width: `${(v.surv / maxSurv) * 100}%`,
-                              background: ramp((v.surv / maxSurv) * 0.75)
-                            }}
-                          ></span>
-                        </span>
-                        {v.surv.toFixed(1)}%
+                      <span className="liq-val">${v.liq.toLocaleString()}</span>
+                    </td>
+                    <td className="num">
+                      <span className={`extract-pill ${v.extract < 35 ? 'ext-good' : (v.extract < 40 ? 'ext-mid' : 'ext-high')}`}>
+                        <span className="ext-dot"></span>
+                        {v.extract.toFixed(1)}%
                       </span>
+                    </td>
+                    <td className="num">
+                      <div className="minibar">
+                        <div className="minibar-track">
+                          <div
+                            className="minibar-fill"
+                            style={{
+                              width: `${survPct}%`,
+                              background: ramp((v.surv / Math.max(65, maxSurv)) * 0.75 + 0.15)
+                            }}
+                          ></div>
+                        </div>
+                        <span className="surv-num">{v.surv.toFixed(1)}%</span>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -628,53 +701,231 @@ export default function HomePage() {
         </p>
 
         <div className="cards">
-          <div className="card">
-            <h3>Surviving</h3>
-            <p>Still meeting the liquidity and trade thresholds seven days after launch. One definition, frozen, versioned when it changes.</p>
+          <div className="card card-card-surviving">
+            <div className="card-top">
+              <div className="card-icon card-icon-surviving">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+              </div>
+              <span className="card-badge card-badge-surviving">7-Day Window</span>
+            </div>
+            <div className="card-content">
+              <h3>Surviving</h3>
+              <p>Still meeting the liquidity and trade thresholds seven days after launch. One definition, frozen, versioned when it changes.</p>
+            </div>
+            <div className="card-footer">
+              <span className="card-footer-dot"></span>
+              <span>Criteria: Active 7D on-chain liquidity</span>
+            </div>
           </div>
-          <div className="card">
-            <h3>Adjusted volume</h3>
-            <p>Raw volume minus flow matching wash patterns. Raw is always shown beside it so you can see what was removed.</p>
+
+          <div className="card card-card-volume">
+            <div className="card-top">
+              <div className="card-icon card-icon-volume">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" y1="21" x2="4" y2="14"/>
+                  <line x1="4" y1="10" x2="4" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12" y2="3"/>
+                  <line x1="20" y1="21" x2="20" y2="16"/>
+                  <line x1="20" y1="12" x2="20" y2="3"/>
+                  <line x1="1" y1="14" x2="7" y2="14"/>
+                  <line x1="9" y1="8" x2="15" y2="8"/>
+                  <line x1="17" y1="16" x2="23" y2="16"/>
+                </svg>
+              </div>
+              <span className="card-badge card-badge-volume">Flow Filtered</span>
+            </div>
+            <div className="card-content">
+              <h3>Adjusted volume</h3>
+              <p>Raw volume minus flow matching wash patterns. Raw is always shown beside it so you can see what was removed.</p>
+            </div>
+            <div className="card-footer">
+              <span className="card-footer-dot"></span>
+              <span>Filter: Wash flow stripped & stated</span>
+            </div>
           </div>
-          <div className="card">
-            <h3>Confidence</h3>
-            <p>Every figure carries its sample size. Below the floor it reads low and is never quietly averaged into a score.</p>
+
+          <div className="card card-card-confidence">
+            <div className="card-top">
+              <div className="card-icon card-icon-confidence">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+              </div>
+              <span className="card-badge card-badge-confidence">Floor Guard</span>
+            </div>
+            <div className="card-content">
+              <h3>Confidence</h3>
+              <p>Every figure carries its sample size. Below the floor it reads low and is never quietly averaged into a score.</p>
+            </div>
+            <div className="card-footer">
+              <span className="card-footer-dot"></span>
+              <span>Sample: Explicit N-floor required</span>
+            </div>
           </div>
-          <div className="card">
-            <h3>Coverage</h3>
-            <p>A chain without a collector shows empty, not estimated. Gaps are stated rather than filled in.</p>
+
+          <div className="card card-card-coverage">
+            <div className="card-top">
+              <div className="card-icon card-icon-coverage">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                </svg>
+              </div>
+              <span className="card-badge card-badge-coverage">Zero Estimates</span>
+            </div>
+            <div className="card-content">
+              <h3>Coverage</h3>
+              <p>A chain without a collector shows empty, not estimated. Gaps are stated rather than filled in.</p>
+            </div>
+            <div className="card-footer">
+              <span className="card-footer-dot"></span>
+              <span>Policy: Empty rather than guessed</span>
+            </div>
           </div>
         </div>
 
-        <div className="weights">
-          {Object.entries(WEIGHTS).map(([k, v]) => (
-            <div className="wrow" key={k}>
-              <span style={{ color: 'var(--dim)' }}>
-                {k === 'chain' && 'chain fit'}
-                {k === 'venue' && 'venue fit'}
-                {k === 'meta' && 'meta heat'}
-                {k === 'hour' && 'hour window'}
-              </span>
-              <span className="t">
-                <span className="f" style={{ width: `${(v / 35) * 100}%` }}></span>
-              </span>
-              <span>{v}</span>
+        <div className="weights-panel">
+          <div className="weights-header">
+            <div className="weights-title-group">
+              <span className="weights-tag">Hypothesis Model</span>
+              <h3>Composite Fit Weighting System</h3>
+              <p>How Waggle calculates the 0–100 structural fit score across four independent on-chain vectors.</p>
             </div>
-          ))}
-          <p style={{ color: 'var(--dimmer)', fontSize: 11, marginTop: 4 }}>
+            <div className="weights-total-badge">
+              <span className="total-num">100</span>
+              <span className="total-label">Total Pts</span>
+            </div>
+          </div>
+
+          <div className="weights-grid">
+            {Object.entries(WEIGHTS).map(([k, v]) => {
+              const info = WEIGHT_DETAILS[k] || { label: k, desc: '' };
+              const fillClass = `fill-${k}`;
+              return (
+                <div className="witem" key={k}>
+                  <div className="witem-top">
+                    <div className="witem-label">
+                      <i className={`wchip wchip-${k}`}></i>
+                      <span className="witem-name">{info.label}</span>
+                    </div>
+                    <div className="witem-val">
+                      <b>{v}</b> <span>pts ({v}%)</span>
+                    </div>
+                  </div>
+                  <div className="wtrack">
+                    <div
+                      className={`wfill ${fillClass}`}
+                      style={{ width: `${(v / 35) * 100}%` }}
+                    ></div>
+                  </div>
+                  <div className="witem-desc">{info.desc}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="weights-footer-note">
             Starting weights, treated as a hypothesis. Any change is evaluated against held out launches before it ships.
           </p>
         </div>
 
         <div className="never">
-          <h3>What Waggle will never do</h3>
-          <ul>
-            <li>Predict that a launch will succeed. It describes structural fit, nothing more.</li>
-            <li>Take payment from a launchpad for placement or for a score.</li>
-            <li>Hold a position in any venue it scores.</li>
-            <li>Show a figure without its sample size and confidence.</li>
-            <li>Use a submitted project in any public output. Submissions stay private.</li>
-          </ul>
+          <div className="never-left">
+            <span className="never-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              Integrity Invariants
+            </span>
+            <h3>What Waggle will never do</h3>
+            <p className="never-lead">
+              A public, unalterable commitment to conflict-free indexing, algorithmic neutrality, and methodology independence.
+            </p>
+            <div className="never-guarantee">
+              <div className="never-guarantee-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+              </div>
+              <div>
+                <div className="never-guarantee-title">Verifiable Invariants</div>
+                <div className="never-guarantee-sub">Code and queries audit-ready in public</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="never-items">
+            <div className="never-item">
+              <div className="never-item-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+              </div>
+              <div className="never-item-text">
+                <strong>Never predict token success</strong>
+                <p>Waggle describes historical structural fit, nothing more. It never predicts price, returns, or profitability.</p>
+              </div>
+            </div>
+
+            <div className="never-item">
+              <div className="never-item-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+              </div>
+              <div className="never-item-text">
+                <strong>Never take payment from launchpads</strong>
+                <p>Zero sponsored placement, paid scores, or affiliate kickbacks from any venue or protocol.</p>
+              </div>
+            </div>
+
+            <div className="never-item">
+              <div className="never-item-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+              </div>
+              <div className="never-item-text">
+                <strong>Never hold positions in scored venues</strong>
+                <p>Modus Research Lab holds zero financial positions or equity stakes in any venue it scores.</p>
+              </div>
+            </div>
+
+            <div className="never-item">
+              <div className="never-item-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+              </div>
+              <div className="never-item-text">
+                <strong>Never hide sample sizes or confidence</strong>
+                <p>Every figure carries its sample size (N). Below the floor it reads low and is never quietly averaged.</p>
+              </div>
+            </div>
+
+            <div className="never-item">
+              <div className="never-item-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+              </div>
+              <div className="never-item-text">
+                <strong>Never disclose submitted project data</strong>
+                <p>Submissions stay strictly confidential and are never used in any public dataset or external output.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

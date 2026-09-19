@@ -107,7 +107,6 @@ CHAINS.forEach((c, ci) => {
   
   (Object.keys(METRICS) as MetricType[]).forEach((m, mi) => {
     MATRIX_DATA[c.key][m] = Array.from({ length: 24 }, (_, h) => {
-      if (c.key === "arc") return null;
       const ev = Math.exp(-Math.pow(h - 20, 2) / 16);
       const as = Math.exp(-Math.pow(h - 7, 2) / 22);
       const nz = seeded(ci, mi, h);

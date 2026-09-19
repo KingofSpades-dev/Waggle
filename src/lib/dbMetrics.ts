@@ -72,7 +72,7 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
     const venuesRes = await client.query(`
       SELECT v.id, v.name, v.key, v.curve_type, c.key as chain_key,
              COUNT(DISTINCT l.id) as launches_count,
-             COALESCE(AVG(CASE WHEN o.is_surviving_7d THEN 100.0 ELSE 0.0 END), 45.0) as survival_rate_pct,
+             COALESCE(AVG(CASE WHEN o.id IS NOT NULL THEN (CASE WHEN o.is_surviving_7d THEN 100.0 ELSE 0.0 END) ELSE NULL END), 45.0) as survival_rate_pct,
              COALESCE(AVG(l.initial_liquidity_usd), 4500.0) as avg_liq_usd,
              COALESCE(AVG(o.first_minute_extraction_pct), 38.0) as extraction_pct
       FROM venues v
@@ -99,9 +99,9 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
       SELECT c.key as chain_key,
              l.launch_hour_utc,
              COUNT(DISTINCT l.id) as launches_cnt,
-             COALESCE(AVG(CASE WHEN o.is_surviving_7d THEN 100.0 ELSE 0.0 END), 42.0) as survival_pct,
+             COALESCE(AVG(CASE WHEN o.id IS NOT NULL THEN (CASE WHEN o.is_surviving_7d THEN 100.0 ELSE 0.0 END) ELSE NULL END), 42.0) as survival_pct,
              COALESCE(AVG(l.initial_liquidity_usd), 4200.0) as avg_liq,
-             COALESCE(AVG(o.first_minute_extraction_pct), 35.0) as avg_extract
+             COALESCE(AVG(o.first_minute_extraction_pct), 38.0) as avg_extract
       FROM launches l
       JOIN chains c ON c.id = l.chain_id
       LEFT JOIN outcomes o ON o.launch_id = l.id
