@@ -168,13 +168,13 @@ async function runSingleCycle() {
 }
 
 async function startDaemon() {
-  console.log('🚀 Starting Waggle Continuous Ingestion Daemon (Interval: 5 Minutes)...');
+  console.log('🚀 Starting Waggle Continuous Ingestion Daemon (Interval: 1 Minute)...');
   await runSingleCycle();
   
-  // Run loop every 5 minutes (300,000 ms) to keep within safe RPC & DB free tier quotas 24/7
+  // Continuous loop every 1 minute (60,000 ms)
   setInterval(async () => {
     await runSingleCycle();
-  }, 300000);
+  }, 60000);
 }
 
 startDaemon();
