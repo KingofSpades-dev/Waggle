@@ -1,0 +1,147 @@
+// Prisma Schema Definition for Waggle (PostgreSQL + TimescaleDB)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chain {
+  id          String    @id @default(uuid()) @db.Uuid
+  key         String    @unique @db.VarChar(32) // 'sol', 'base', 'bnb', 'rh', 'arc'
+  name        String    @db.VarChar(64)
+  hue         String    @db.VarChar(16)
+  dataSources String[]
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  venues      Venue[]
+  launches    Launch[]
+
+  @@map("chains")
+}
+
+model Venue {
+  id                     String    @id @default(uuid()) @db.Uuid
+  chainId                String    @map("chain_id") @db.Uuid
+  name                   String    @db.VarChar(64)
+  key                    String    @unique @db.VarChar(32) // 'pump_fun', 'clanker'
+  curveType              String    @map("curve_type") @db.VarChar(32) // 'bonding_curve', 'amm'
+  feeStructure           Json?     @map("fee_structure")
+  graduationThresholdUsd Decimal?  @map("graduation_threshold_usd") @db.Decimal(18, 2)
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  chain    Chain    @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  launches Launch[]
+
+  @@map("venues")
+}
+
+model Launch {
+  id                  String   @id @default(uuid()) @db.Uuid
+  chainId             String   @map("chain_id") @db.Uuid
+  venueId             String   @map("venue_id") @db.Uuid
+  tokenAddress        String   @map("token_address") @db.VarChar(128)
+  poolAddress         String   @map("pool_address") @db.VarChar(128)
+  creatorWallet       String?  @map("creator_wallet") @db.VarChar(128)
+  blockNumber         BigInt   @map("block_number")
+  blockTimestamp      DateTime @map("block_timestamp") @db.Timestamptz
+  launchHourUtc       Int      @map("launch_hour_utc") @db.SmallInt
+  initialLiquidityUsd Decimal  @map("initial_liquidity_usd") @db.Decimal(18, 2)
+
+  chain     Chain            @relation(fields: [chainId], references: [id])
+  venue     Venue            @relation(fields: [venueId], references: [id])
+  outcome   Outcome?
+  trades    TradeFirstHour[]
+
+  @@index([chainId, venueId, blockTimestamp(sort: Desc)])
+  @@index([blockTimestamp(sort: Desc)])
+  @@map("launches")
+}
+
+model TradeFirstHour {
+  id                 String   @id @default(uuid()) @db.Uuid
+  launchId           String   @map("launch_id") @db.Uuid
+  txHash             String   @map("tx_hash") @db.VarChar(128)
+  traderWallet       String   @map("trader_wallet") @db.VarChar(128)
+  secondsAfterLaunch Int      @map("seconds_after_launch")
+  isBuy              Boolean  @map("is_buy")
+  amountUsd          Decimal  @map("amount_usd") @db.Decimal(18, 2)
+  blockTimestamp     DateTime @map("block_timestamp") @db.Timestamptz
+
+  launch Launch @relation(fields: [launchId], references: [id], onDelete: Cascade)
+
+  @@index([launchId, secondsAfterLaunch])
+  @@map("trades_first_hour")
+}
+
+model Outcome {
+  id                        String   @id @default(uuid()) @db.Uuid
+  launchId                  String   @unique @map("launch_id") @db.Uuid
+  isSurviving7d             Boolean  @map("is_surviving_7d")
+  liquidity7dUsd            Decimal  @map("liquidity_7d_usd") @db.Decimal(18, 2)
+  trades24hCount            Int      @map("trades_24h_count")
+  firstMinuteExtractionPct  Decimal  @map("first_minute_extraction_pct") @db.Decimal(5, 2)
+  evaluatedAt               DateTime @map("evaluated_at") @db.Timestamptz
+
+  launch Launch @relation(fields: [launchId], references: [id], onDelete: Cascade)
+
+  @@map("outcomes")
+}
+
+model MetricsSnapshot {
+  id                   String   @id @default(uuid()) @db.Uuid
+  snapshotTime         DateTime @default(now()) @map("snapshot_time") @db.Timestamptz
+  windowStart          DateTime @map("window_start") @db.Timestamptz
+  windowEnd            DateTime @map("window_end") @db.Timestamptz
+  metricsVersion       String   @map("metrics_version") @db.VarChar(32)
+  weightsVersion       String   @map("weights_version") @db.VarChar(32)
+  sampleSizes          Json     @map("sample_sizes")
+  payload              Json
+  contributingAdapters Json     @map("contributing_adapters")
+  isDriftHeld          Boolean  @default(false) @map("is_drift_held")
+
+  reports Report[]
+
+  @@index([snapshotTime(sort: Desc)])
+  @@map("metrics_snapshots")
+}
+
+model Submission {
+  id           String    @id @default(uuid()) @db.Uuid
+  rawText      String    @map("raw_text")
+  submittedUrl String?   @map("submitted_url")
+  audienceTier String?   @map("audience_tier") @db.VarChar(32)
+  treasuryUsd  Decimal?  @map("treasury_usd") @db.Decimal(18, 2)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
+
+  reports Report[]
+
+  @@index([expiresAt])
+  @@map("submissions")
+}
+
+model Report {
+  id                 String   @id @default(uuid()) @db.Uuid
+  submissionId       String?  @map("submission_id") @db.Uuid
+  snapshotId         String   @map("snapshot_id") @db.Uuid
+  classifierVersion  String   @map("classifier_version") @db.VarChar(32)
+  weightsVersion     String   @map("weights_version") @db.VarChar(32)
+  metricsVersion     String   @map("metrics_version") @db.VarChar(32)
+  classifiedCategory String   @map("classified_category") @db.VarChar(32)
+  verdictChainKey    String   @map("verdict_chain_key") @db.VarChar(32)
+  verdictVenueKey    String   @map("verdict_venue_key") @db.VarChar(32)
+  verdictHour        Int      @map("verdict_hour") @db.SmallInt
+  compositeScore     Int      @map("composite_score") @db.SmallInt
+  dimensionScores    Json     @map("dimension_scores")
+  confidenceLevels   Json     @map("confidence_levels")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  submission Submission?     @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  snapshot   MetricsSnapshot @relation(fields: [snapshotId], references: [id])
+
+  @@map("reports")
+}

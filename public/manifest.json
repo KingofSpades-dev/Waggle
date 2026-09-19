@@ -1,0 +1,21 @@
+{
+  "name": "Waggle — Autonomous Launch Research",
+  "short_name": "Waggle",
+  "description": "Scouting chains and launchpads so creators can see where a token structurally fits.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5ff",
+  "theme_color": "#7b45d8",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

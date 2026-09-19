@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waggle — where should this launch</title>
+<meta name="description" content="Scouting chains and launchpads so creators can see where a token structurally fits.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5ff;--bg2:#eeeaff;--panel:#ffffff;--panel2:#f3f0ff;
+  --line:#e0d8f5;--line2:#cabdec;
+  --text:#191038;--dim:#61558c;--dimmer:#8d84ad;--nan:#e6e2f2;
+  --c1:#0091b0;--c2:#12b981;--c3:#c99700;--c4:#e07b28;--c5:#e0335f;--c6:#7b45d8;
+  --ink:#191038;
+  --shadow:0 1px 2px rgba(25,16,56,.06),0 8px 24px rgba(25,16,56,.06);
+  --mono:'Space Mono',ui-monospace,Menlo,monospace;
+  --display:'Fredoka',system-ui,sans-serif;
+  --r:2px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(30px,7vw,52px);line-height:1.04;font-weight:700}
+h2{font-size:clamp(20px,4.4vw,28px);line-height:1.15}
+h3{font-size:16px}
+p{margin:0}
+a{color:var(--c1);text-decoration:none;border-bottom:1px solid rgba(0,145,176,.35)}
+a:hover{border-bottom-color:var(--c1)}
+button{font-family:var(--mono)}
+:focus-visible{outline:2px solid var(--c6);outline-offset:2px}
+section{padding:54px 0;border-top:1px solid var(--line)}
+.eyebrow{font-size:11px;color:var(--dimmer);margin-bottom:10px}
+.lede{color:var(--dim);max-width:62ch;margin-top:14px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:rgba(247,245,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.navin{max-width:920px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:14px}
+.logo{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.02em}
+.logo i{display:inline-block;width:9px;height:9px;background:var(--c6);transform:rotate(45deg);margin-left:1px}
+.navlinks{margin-left:auto;display:flex;gap:16px;font-size:12px}
+.navlinks a{color:var(--dim);border:0}
+.navlinks a:hover{color:var(--text)}
+@media(max-width:560px){.navlinks{display:none}}
+
+/* hero */
+.hero{padding:44px 0 50px;border-top:0}
+.livebar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-bottom:22px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--c2);animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.5);opacity:1}}
+.pill{border:1px solid var(--c4);color:var(--c4);background:#fff7ee;padding:1px 7px}
+.hero h1 em{font-style:normal;color:var(--c6)}
+
+/* submit */
+.submit{margin-top:26px;border:1px solid var(--line);background:var(--panel);padding:16px;box-shadow:var(--shadow)}
+.submit label{display:block;font-size:12px;color:var(--dim);margin-bottom:8px}
+.field{display:flex;gap:8px;flex-wrap:wrap}
+.field textarea{
+  flex:1 1 260px;min-height:76px;resize:vertical;background:#fff;border:1px solid var(--line2);
+  color:var(--text);font-family:var(--mono);font-size:13px;padding:10px;border-radius:var(--r)}
+.field textarea::placeholder{color:var(--dimmer)}
+.go{
+  flex:0 0 auto;background:var(--c6);color:#ffffff;border:0;padding:0 20px;height:44px;align-self:flex-end;
+  font-size:13px;font-weight:700;cursor:pointer;border-radius:var(--r);transition:filter .15s}
+.go:hover{filter:brightness(1.12)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{background:transparent;border:1px solid var(--line2);color:var(--dim);font-size:11px;padding:4px 9px;cursor:pointer;border-radius:var(--r)}
+.chip:hover{color:var(--text);border-color:var(--c1)}
+
+/* report */
+.report{margin-top:14px;border:1px solid var(--line2);background:var(--panel2);padding:16px;display:none}
+.report.on{display:block;animation:up .32s ease-out}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.verdict{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.verdict .big{font-family:var(--display);font-size:clamp(26px,6vw,38px);font-weight:700;line-height:1}
+.verdict .score{font-size:12px;color:var(--dim);padding-bottom:4px}
+.vsub{color:var(--dim);font-size:12px;margin-top:8px}
+.dims{margin-top:16px;display:grid;gap:9px}
+.dim{display:grid;grid-template-columns:96px 1fr 62px;gap:9px;align-items:center;font-size:11px}
+.dim .nm{color:var(--dim)}
+.track{height:7px;background:#ece7fa;border:1px solid var(--line);overflow:hidden}
+.fill{height:100%;width:0;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.dim .vl{text-align:right;color:var(--text)}
+.dim .vl small{color:var(--dimmer)}
+.caveat{margin-top:14px;border-left:2px solid var(--c4);padding-left:10px;font-size:12px;color:var(--dim)}
+.alts{margin-top:14px;border-top:1px solid var(--line);padding-top:11px;font-size:12px;color:var(--dim)}
+.alts b{color:var(--text);font-weight:400}
+
+/* matrix */
+.scroller{overflow-x:auto;padding-bottom:2px;margin-top:18px}
+.matrix{display:flex;flex-direction:column;gap:3px;min-width:430px}
+.mrow{display:grid;grid-template-columns:82px repeat(24,1fr);gap:3px;align-items:stretch}
+.rlab{display:flex;align-items:center;gap:6px;font-size:11px;white-space:nowrap;padding-right:4px;overflow:hidden}
+.rlab span{overflow:hidden;text-overflow:ellipsis}
+.ychip{width:7px;height:7px;flex:none;transform:rotate(45deg)}
+.cell{aspect-ratio:1;border:0;padding:0;cursor:pointer;transition:transform .1s;box-shadow:inset 0 0 0 1px rgba(25,16,56,.07)}
+.cell:hover{transform:scale(1.4);z-index:3;box-shadow:0 0 0 1px var(--c6)}
+.cell.sel{box-shadow:0 0 0 2px var(--c6);z-index:2}
+.cell.nan{background:repeating-linear-gradient(45deg,#edeaf7 0 4px,#e1ddf0 4px 8px)}
+.cell.flash{animation:flash .6s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--c6)}100%{box-shadow:inset 0 0 0 1px rgba(25,16,56,.07)}}
+.xaxis{display:grid;grid-template-columns:82px repeat(24,1fr);gap:3px;margin-top:6px;font-size:9px;color:var(--dimmer);text-align:center;min-width:430px}
+.xtitle{font-size:11px;color:var(--dimmer);margin-top:5px}
+.cbar{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:10px;color:var(--dimmer)}
+.cramp{flex:1;height:10px;border:1px solid var(--line2)}
+.tabs{display:flex;border:1px solid var(--line);overflow-x:auto;margin-top:18px}
+.tabs button{flex:1 0 auto;min-width:116px;background:transparent;border:0;border-right:1px solid var(--line);color:var(--dim);font-size:11px;padding:9px;cursor:pointer;text-align:left}
+.tabs button:last-child{border-right:0}
+.tabs button:hover{background:var(--panel2);color:var(--text)}
+.tabs button[aria-pressed="true"]{background:var(--c6);color:#fff;font-weight:700}
+.cellinfo{margin-top:12px;border:1px solid var(--line);background:var(--panel);padding:12px;font-size:12px;box-shadow:var(--shadow)}
+.cellinfo .kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.cellinfo .kv div:nth-child(odd){color:var(--dim)}
+.cellinfo .kv div:nth-child(even){text-align:right}
+.conf{font-size:11px;padding:1px 6px;border:1px solid currentColor}
+.c-high{color:var(--c2)}.c-med{color:var(--c3)}.c-low{color:var(--dimmer)}
+body{background-image:radial-gradient(circle at 12% 0%,#efe9ff 0,transparent 42%)}
+.note{font-size:11px;color:var(--dimmer);margin-top:10px}
+.nankey{display:inline-block;width:10px;height:10px;background:repeating-linear-gradient(45deg,#edeaf7 0 3px,#e1ddf0 3px 6px);border:1px solid var(--line2);vertical-align:-1px;margin:0 3px}
+
+/* venues */
+.tablewrap{overflow-x:auto;margin-top:8px;border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:12px}
+th{text-align:left;font-weight:400;color:var(--dim);padding:10px;border-bottom:1px solid var(--line2);white-space:nowrap;cursor:pointer;background:var(--panel2)}
+th:hover{color:var(--text)}
+th[aria-sort]{color:var(--c1)}
+td{padding:10px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--panel2)}
+.vname{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.vchip{width:7px;height:7px;flex:none;transform:rotate(45deg)}
+.minibar{display:flex;align-items:center;gap:7px}
+.minibar .t{width:52px;height:6px;background:#ece7fa;border:1px solid var(--line)}
+.minibar .f{height:100%}
+
+/* method */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px}
+.card{border:1px solid var(--line);background:var(--panel);padding:14px;box-shadow:var(--shadow)}
+.card h3{margin-bottom:6px}
+.card p{font-size:12px;color:var(--dim)}
+.weights{margin-top:16px;display:grid;gap:7px;font-size:12px}
+.wrow{display:grid;grid-template-columns:120px 1fr 38px;gap:9px;align-items:center}
+.wrow .t{height:6px;background:#ece7fa;border:1px solid var(--line)}
+.wrow .f{height:100%;background:var(--c6)}
+.never{margin-top:22px;border:1px solid var(--c5);background:#fff5f7;padding:14px}
+.never h3{color:var(--c5);margin-bottom:6px}
+.never ul{margin:0;padding-left:17px;color:var(--dim);font-size:12px}
+.never li{margin-bottom:4px}
+footer{border-top:1px solid var(--line);padding:26px 0 40px;font-size:11px;color:var(--dimmer)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<nav><div class="navin">
+  <span class="logo">waggle<i></i></span>
+  <span class="navlinks">
+    <a href="#hours">hours</a><a href="#venues">launchpads</a><a href="#method">method</a>
+  </span>
+</div></nav>
+
+<div class="wrap">
+
+<section class="hero">
+  <div class="livebar">
+    <span class="dot"></span><span id="collectors">4 collectors running, 1 not started</span>
+    <span>·</span><span>updated <b id="age">just now</b></span>
+    <span class="pill">sample data</span>
+  </div>
+  <h1>Too many chains.<br>Too many launchpads.<br><em>One honest answer.</em></h1>
+  <p class="lede">Describe what you built. Waggle scores it against where surviving launches actually happen, then tells you the chain, the venue, and the hour window that fit its shape. It will not tell you whether it will work, because nothing in this data can.</p>
+
+  <div class="submit">
+    <label for="desc">What are you launching</label>
+    <div class="field">
+      <textarea id="desc" placeholder="An autonomous trading agent that rebalances onchain positions, aimed at DeFi users. No audience yet, small treasury."></textarea>
+      <button class="go" id="go">Scout it</button>
+    </div>
+    <div class="chips">
+      <button class="chip" data-ex="agent">AI agent tooling</button>
+      <button class="chip" data-ex="game">Game token</button>
+      <button class="chip" data-ex="defi">DeFi protocol</button>
+      <button class="chip" data-ex="meme">Community memecoin</button>
+      <button class="chip" data-ex="rwa">Tokenised asset</button>
+    </div>
+    <div class="report" id="report"></div>
+  </div>
+</section>
+
+<section id="hours">
+  <div class="eyebrow">chain by hour</div>
+  <h2>The good hours are not the same on every chain</h2>
+  <p class="lede">Rows are chains, columns are launch hours in UTC. A finding from one chain does not transfer to the next, which is why this is a matrix rather than a single number.</p>
+
+  <div class="tabs" role="group" aria-label="Metric">
+    <button data-m="survival" aria-pressed="true">still alive<br>after 7 days</button>
+    <button data-m="launches" aria-pressed="false">launches<br>started</button>
+    <button data-m="extraction" aria-pressed="false">first minute<br>extraction</button>
+  </div>
+
+  <div class="scroller">
+    <div class="matrix" id="matrix"></div>
+    <div class="xaxis" id="xaxis"></div>
+  </div>
+  <div class="xtitle">launch hour, UTC</div>
+  <div class="cbar"><span id="cmin">low</span><div class="cramp" id="cramp"></div><span id="cmax">high</span></div>
+  <p class="note">Warm reads as favourable on every metric, so on extraction the scale is reversed and lower sits at the warm end. Launches started is intensity only, since congestion is a fact rather than a verdict. <i class="nankey"></i> means no collector is running for that chain, so the cell is empty rather than estimated.</p>
+
+  <div class="cellinfo" id="cellinfo"></div>
+</section>
+
+<section id="venues">
+  <div class="eyebrow">launchpads</div>
+  <h2>The comparison that does not exist in public</h2>
+  <p class="lede">Every venue on one scale, with the number that matters most last: how many of its launches are still trading a week later. Tap a column heading to sort.</p>
+  <p class="note" style="margin-top:0">Scroll sideways for the full table.</p>
+  <div class="tablewrap">
+    <table id="vtable">
+      <thead><tr>
+        <th data-s="name">venue</th>
+        <th data-s="chain">chain</th>
+        <th data-s="perday">launches per day</th>
+        <th data-s="liq">median launch liquidity</th>
+        <th data-s="extract">first minute extraction</th>
+        <th data-s="surv" aria-sort="descending">alive after 7 days</th>
+      </tr></thead>
+      <tbody id="vbody"></tbody>
+    </table>
+  </div>
+  <p class="note">Extraction is the share of first minute volume taken by wallets that sell within thirty minutes and hold nothing after. Lower is healthier.</p>
+</section>
+
+<section id="method">
+  <div class="eyebrow">method</div>
+  <h2>Everything above is checkable</h2>
+  <p class="lede">A recommendation engine nobody can inspect is indistinguishable from an advertisement for whichever venue it favours. So the weights, the definitions and the queries are public, and they change in public.</p>
+
+  <div class="cards">
+    <div class="card"><h3>Surviving</h3><p>Still meeting the liquidity and trade thresholds seven days after launch. One definition, frozen, versioned when it changes.</p></div>
+    <div class="card"><h3>Adjusted volume</h3><p>Raw volume minus flow matching wash patterns. Raw is always shown beside it so you can see what was removed.</p></div>
+    <div class="card"><h3>Confidence</h3><p>Every figure carries its sample size. Below the floor it reads low and is never quietly averaged into a score.</p></div>
+    <div class="card"><h3>Coverage</h3><p>A chain without a collector shows empty, not estimated. Gaps are stated rather than filled in.</p></div>
+  </div>
+
+  <div class="weights" id="weights"></div>
+
+  <div class="never">
+    <h3>What Waggle will never do</h3>
+    <ul>
+      <li>Predict that a launch will succeed. It describes structural fit, nothing more.</li>
+      <li>Take payment from a launchpad for placement or for a score.</li>
+      <li>Hold a position in any venue it scores.</li>
+      <li>Show a figure without its sample size and confidence.</li>
+      <li>Use a submitted project in any public output. Submissions stay private.</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="wrap">
+  Sample figures throughout, wired to the shape the collectors will return. Nothing here is live yet.<br>
+  This describes structural fit from historical data. It is not advice and not a prediction.<br>
+  A project of Modus Research Lab.
+</footer>
+</div>
+
+<script>
+/* ---------- data layer, shaped like metrics_snapshots ---------- */
+const CHAINS=[
+ {name:"Solana",key:"sol",hue:"#7b45d8",src:"GeckoTerminal, DefiLlama",conf:"high",n:9800,
+  cats:{agent:62,defi:74,game:58,meme:92,rwa:31},meta:{agent:78,defi:66,game:49,meme:96,rwa:22}},
+ {name:"Base",key:"base",hue:"#0091b0",src:"GeckoTerminal, DexScreener",conf:"med",n:1720,
+  cats:{agent:88,defi:71,game:54,meme:64,rwa:44},meta:{agent:71,defi:52,game:38,meme:70,rwa:33}},
+ {name:"BNB Chain",key:"bnb",hue:"#c08a00",src:"DefiLlama, DexScreener",conf:"med",n:2100,
+  cats:{agent:41,defi:69,game:77,meme:73,rwa:38},meta:{agent:44,defi:58,game:64,meme:81,rwa:29}},
+ {name:"Robinhood",key:"rh",hue:"#12b981",src:"self indexed from RPC",conf:"low",n:340,
+  cats:{agent:34,defi:42,game:26,meme:69,rwa:81},meta:{agent:21,defi:30,game:18,meme:74,rwa:46}},
+ {name:"Arc",key:"arc",hue:"#e07b28",src:"no collector yet",conf:"low",n:0,cats:null,meta:null}
+];
+const VENUES=[
+ {name:"Pump.fun",chain:"sol",perday:10400,liq:4100,extract:71,surv:1.9},
+ {name:"Bonk.fun",chain:"sol",perday:2200,liq:5600,extract:64,surv:2.6},
+ {name:"Bags",chain:"sol",perday:640,liq:7300,extract:58,surv:3.4},
+ {name:"Clanker",chain:"base",perday:880,liq:9100,extract:47,surv:5.1},
+ {name:"Zora",chain:"base",perday:410,liq:6800,extract:39,surv:4.2},
+ {name:"Four.meme",chain:"bnb",perday:1600,liq:3900,extract:69,surv:2.4},
+ {name:"PAIR",chain:"rh",perday:310,liq:12400,extract:62,surv:3.1}
+];
+const CHAINBY=Object.fromEntries(CHAINS.map(c=>[c.key,c]));
+const METRICS={
+ survival:{dir:"high",fmt:v=>v.toFixed(1)+"%",label:"still trading after 7 days"},
+ launches:{dir:"none",fmt:v=>Math.round(v)+"",label:"launches started in this hour"},
+ extraction:{dir:"low",fmt:v=>v.toFixed(0)+"%",label:"first minute extraction"}
+};
+const STOPS=[[228,238,252],[142,198,240],[64,196,214],[86,214,150],[246,206,74],[240,136,60],[214,48,104]];
+function ramp(t){t=Math.max(0,Math.min(1,t));const x=t*(STOPS.length-1),i=Math.floor(x),f=x-i,
+ a=STOPS[i],b=STOPS[Math.min(i+1,STOPS.length-1)];
+ return"rgb("+Math.round(a[0]+(b[0]-a[0])*f)+","+Math.round(a[1]+(b[1]-a[1])*f)+","+Math.round(a[2]+(b[2]-a[2])*f)+")";}
+function hexrgb(h){const n=parseInt(h.slice(1),16);
+ return"rgb("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+")";}
+function shade(rgb,f){const m=rgb.match(/\d+/g).map(Number);
+ return"rgb("+m.map(v=>Math.round(v*f)).join(",")+")";}
+function seeded(a,b,c){const x=Math.sin(a*127.1+b*311.7+c*74.7)*43758.5453;return x-Math.floor(x);}
+const M={};
+CHAINS.forEach((c,ci)=>{M[c.key]={};Object.keys(METRICS).forEach((m,mi)=>{
+ M[c.key][m]=Array.from({length:24},(_,h)=>{
+   if(c.key==="arc")return null;
+   const ev=Math.exp(-Math.pow(h-20,2)/16), as=Math.exp(-Math.pow(h-7,2)/22), nz=seeded(ci,mi,h);
+   if(m==="survival")return 1.2+ev*4.2+as*1.4+nz*1.3;
+   if(m==="launches")return 40+ev*260+as*150+nz*70;
+   return 74-ev*26-as*9+nz*16;});});});
+
+/* ---------- hour matrix ---------- */
+let metric="survival",sel=null,stamp=Date.now();
+function range(m){let lo=1/0,hi=-1/0;CHAINS.forEach(c=>{const a=M[c.key][m];if(!a)return;
+ a.forEach(v=>{if(v==null)return;lo=Math.min(lo,v);hi=Math.max(hi,v);});});return[lo,hi];}
+function drawMatrix(){
+ const[lo,hi]=range(metric),dir=METRICS[metric].dir;
+ matrix.innerHTML="";
+ CHAINS.forEach(c=>{const row=document.createElement("div");row.className="mrow";
+  const lab=document.createElement("div");lab.className="rlab";
+  lab.innerHTML='<i class="ychip" style="background:'+c.hue+'"></i><span>'+c.name+'</span>';
+  row.appendChild(lab);
+  for(let h=0;h<24;h++){const v=M[c.key][metric]?M[c.key][metric][h]:null;
+   const b=document.createElement("button");
+   b.className="cell"+(sel&&sel.k===c.key&&sel.h===h?" sel":"");
+   b.dataset.k=c.key;b.dataset.h=h;
+   if(v==null)b.classList.add("nan");
+   else{let t=(v-lo)/(hi-lo||1);if(dir==="low")t=1-t;b.style.background=ramp(t);}
+   b.setAttribute("aria-label",c.name+", "+String(h).padStart(2,"0")+":00 UTC, "+(v==null?"no data":METRICS[metric].fmt(v)));
+   b.onclick=()=>{sel={k:c.key,h:h};drawMatrix();cellInfo();};
+   row.appendChild(b);} matrix.appendChild(row);});
+ xaxis.innerHTML="<span></span>"+Array.from({length:24},(_,h)=>"<span>"+(h%3===0?String(h).padStart(2,"0"):"")+"</span>").join("");
+ cramp.style.background="linear-gradient(to right,"+Array.from({length:12},(_,i)=>ramp(i/11)).join(",")+")";
+ cmin.textContent=dir==="low"?METRICS[metric].fmt(hi):METRICS[metric].fmt(lo);
+ cmax.textContent=dir==="low"?METRICS[metric].fmt(lo):METRICS[metric].fmt(hi);
+}
+function cellInfo(){
+ if(!sel){cellinfo.innerHTML='<b>Pick a cell.</b> Every figure carries its sample size, its confidence, and its source.';return;}
+ const c=CHAINBY[sel.k],v=M[c.key][metric]?M[c.key][metric][sel.h]:null,[lo,hi]=range(metric);
+ let read;
+ if(v==null)read="No collector is running for this chain, so the cell is empty rather than estimated.";
+ else if(c.conf==="low")read="The sample here is too small to read. Treat it as unknown, not as good news.";
+ else if(metric==="survival"&&v>hi*.85)read="Among the strongest hours on this chain. The cluster differs by chain, so do not carry it across rows.";
+ else if(metric==="launches")read="Congestion rather than quality. More launches means more competition for the same attention.";
+ else if(metric==="extraction")read="Share of first minute volume taken by wallets that sell within thirty minutes and hold nothing after.";
+ else read="Readable sample, though survival still varies by venue inside the chain.";
+ cellinfo.innerHTML='<b>'+c.name+' at '+String(sel.h).padStart(2,"0")+':00 UTC</b> — '+METRICS[metric].label+
+  '<div class="kv"><div>value</div><div>'+(v==null?"no data":METRICS[metric].fmt(v))+'</div>'+
+  '<div>range on this chart</div><div>'+METRICS[metric].fmt(lo)+" to "+METRICS[metric].fmt(hi)+'</div>'+
+  '<div>sample size</div><div>'+(c.n?c.n.toLocaleString():"0")+'</div>'+
+  '<div>confidence</div><div><span class="conf c-'+c.conf+'">'+c.conf+'</span></div>'+
+  '<div>source</div><div>'+c.src+'</div></div>'+
+  '<p style="margin-top:10px;color:var(--dim)">'+read+'</p>';
+}
+document.querySelectorAll(".tabs button").forEach(b=>{b.onclick=()=>{metric=b.dataset.m;
+ document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+ drawMatrix();cellInfo();};});
+
+/* ---------- venue table ---------- */
+let sortKey="surv",sortDir=-1;
+function drawVenues(){
+ const rows=[...VENUES].sort((a,b)=>{const x=a[sortKey],y=b[sortKey];
+  return typeof x==="string"?x.localeCompare(y)*sortDir:(x-y)*sortDir;});
+ const maxSurv=Math.max(...VENUES.map(v=>v.surv));
+ vbody.innerHTML=rows.map(v=>{
+  const c=CHAINBY[v.chain];
+  return '<tr><td><span class="vname"><i class="vchip" style="background:'+c.hue+'"></i>'+v.name+'</span></td>'+
+   '<td style="color:var(--dim)">'+c.name+'</td>'+
+   '<td>'+v.perday.toLocaleString()+'</td>'+
+   '<td>$'+v.liq.toLocaleString()+'</td>'+
+   '<td style="color:'+shade(ramp(1-(v.extract-35)/45),.62)+'">'+v.extract+'%</td>'+
+   '<td><span class="minibar"><span class="t"><span class="f" style="width:'+(v.surv/maxSurv*100)+'%;background:'+ramp(v.surv/maxSurv*.75)+'"></span></span>'+v.surv.toFixed(1)+'%</span></td></tr>';
+ }).join("");
+ document.querySelectorAll("#vtable th").forEach(th=>{
+  if(th.dataset.s===sortKey)th.setAttribute("aria-sort",sortDir===-1?"descending":"ascending");
+  else th.removeAttribute("aria-sort");});
+}
+document.querySelectorAll("#vtable th").forEach(th=>{th.tabIndex=0;th.setAttribute("role","button");
+ th.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();th.click();}};
+ th.onclick=()=>{
+ const k=th.dataset.s;
+ if(k===sortKey)sortDir*=-1;else{sortKey=k;sortDir=(k==="name"||k==="chain")?1:-1;}
+ drawVenues();};});
+
+/* ---------- scout report ---------- */
+const WEIGHTS={chain:35,venue:30,meta:20,hour:15};
+const EXAMPLES={
+ agent:"An autonomous trading agent that rebalances onchain positions for DeFi users. No audience yet, small treasury.",
+ game:"A browser game with an in game currency, aimed at casual players who do not hold crypto.",
+ defi:"A lending protocol with a governance token, audited, launching with a liquidity partner.",
+ meme:"A community memecoin built around a running joke from a Discord of about four thousand people.",
+ rwa:"A token representing fractional ownership of rental property, with a licensed custodian."
+};
+const KEYS={
+ agent:["agent","autonomous","ai","bot","llm","inference"],
+ defi:["defi","lending","yield","liquidity","perp","stablecoin","protocol","vault"],
+ game:["game","gaming","play","player","nft","item","quest"],
+ meme:["meme","community","joke","discord","culture","viral","coin"],
+ rwa:["rwa","property","asset","equity","custodian","tokenis","tokeniz","real world"]
+};
+function classify(t){
+ const s=t.toLowerCase();let best="meme",hits=0;
+ for(const k in KEYS){const n=KEYS[k].filter(w=>s.includes(w)).length;if(n>hits){hits=n;best=k;}}
+ return{cat:best,hits:hits};
+}
+function scout(){
+ const txt=desc.value.trim();
+ if(!txt){desc.focus();return;}
+ const {cat,hits}=classify(txt);
+ const smallTreasury=/no audience|small treasury|no budget|solo|first token/i.test(txt);
+ const scored=CHAINS.filter(c=>c.cats).map(c=>{
+  const chainFit=c.cats[cat];
+  const hours=M[c.key].survival, best=hours.indexOf(Math.max(...hours));
+  const hourFit=Math.round(Math.max(...hours)/6.9*100);
+  const vs=VENUES.filter(v=>v.chain===c.key);
+  const venue=vs.sort((a,b)=>(smallTreasury? a.extract-b.extract : b.surv-a.surv))[0];
+  const venueFit=venue?Math.round(100-venue.extract+ (venue.surv*6)):40;
+  const metaHeat=c.meta[cat];
+  const composite=Math.round(
+   chainFit*WEIGHTS.chain/100 + Math.min(venueFit,100)*WEIGHTS.venue/100 +
+   (100-Math.abs(metaHeat-62))*WEIGHTS.meta/100 + hourFit*WEIGHTS.hour/100);
+  return{c,chainFit,venue,venueFit:Math.min(venueFit,100),metaHeat,hourFit,best,composite};
+ }).sort((a,b)=>b.composite-a.composite);
+ const top=scored[0];
+ const heatRead=top.metaHeat>75?"crowded, and survival inside this category is falling, so the crowd is noise"
+   :top.metaHeat>55?"busy, with survival holding, so the crowd is attention rather than noise"
+   :"quiet, which means less competition and less passing traffic";
+ const confLine=top.c.conf==="low"
+  ?"Confidence is low. The sample on this chain is too small to lean on, and this reads as a suggestion rather than a finding."
+  :top.c.conf==="med"?"Confidence is moderate. The sample is readable but thinner than Solana's.":"Confidence is high on chain level data, moderate at venue level.";
+ report.className="report on";
+ report.innerHTML=
+  '<div class="verdict"><span class="big" style="color:'+shade(hexrgb(top.c.hue),.72)+'">'+top.c.name+'</span>'+
+  '<span class="score">fit '+top.composite+' of 100 · '+top.venue.name+' · '+String(top.best).padStart(2,"0")+':00 UTC window</span></div>'+
+  '<p class="vsub">Read as: launches shaped like this one survive more often on '+top.c.name+
+  ', and '+top.venue.name+' is the venue there whose mechanics suit '+(smallTreasury?"a launch without an audience behind it":"this shape")+'. The current meta is '+heatRead+'.</p>'+
+  '<div class="dims">'+
+  dim("chain fit",top.chainFit,WEIGHTS.chain,"#7b45d8")+
+  dim("venue fit",top.venueFit,WEIGHTS.venue,"#0091b0")+
+  dim("meta heat",top.metaHeat,WEIGHTS.meta,"#e0a500")+
+  dim("hour window",top.hourFit,WEIGHTS.hour,"#12b981")+
+  '</div>'+
+  '<p class="caveat">'+confLine+' This describes where this token structurally fits. It does not say the launch will work, and nothing here accounts for whether anyone is waiting for it.</p>'+
+  '<div class="alts">Next best: '+scored.slice(1,3).map(s=>'<b>'+s.c.name+'</b> '+s.composite).join(" · ')+
+  ' · classified as <b>'+cat+'</b>'+(hits<2?" on weak signal, so add detail for a firmer read":"")+'</div>';
+ requestAnimationFrame(()=>report.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%"));
+}
+function dim(name,val,weight,col){
+ return '<div class="dim"><span class="nm">'+name+'</span>'+
+  '<span class="track"><span class="fill" data-w="'+val+'" style="background:'+col+'"></span></span>'+
+  '<span class="vl">'+val+' <small>/'+weight+'</small></span></div>';
+}
+go.onclick=scout;
+desc.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key==="Enter")scout();});
+document.querySelectorAll(".chip").forEach(ch=>{ch.onclick=()=>{desc.value=EXAMPLES[ch.dataset.ex];scout();};});
+
+/* ---------- weights panel ---------- */
+weights.innerHTML=Object.entries(WEIGHTS).map(([k,v])=>
+ '<div class="wrow"><span style="color:var(--dim)">'+({chain:"chain fit",venue:"venue fit",meta:"meta heat",hour:"hour window"})[k]+
+ '</span><span class="t"><span class="f" style="width:'+(v/35*100)+'%"></span></span><span>'+v+'</span></div>').join("")+
+ '<p style="color:var(--dimmer);font-size:11px;margin-top:4px">Starting weights, treated as a hypothesis. Any change is evaluated against held out launches before it ships.</p>';
+
+/* ---------- live tick ---------- */
+setInterval(()=>{
+ if(document.hidden)return;
+ const live=CHAINS.filter(c=>c.key!=="arc");
+ const c=live[Math.floor(Math.random()*live.length)],h=Math.floor(Math.random()*24);
+ Object.keys(METRICS).forEach(m=>{M[c.key][m][h]*=1+(Math.random()-.5)*.05;});
+ stamp=Date.now();drawMatrix();if(sel)cellInfo();
+ const el=document.querySelector('.cell[data-k="'+c.key+'"][data-h="'+h+'"]');
+ if(el){el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),600);}
+},5200);
+setInterval(()=>{const s=Math.round((Date.now()-stamp)/1000);
+ age.textContent=s<5?"just now":s+"s ago";},1000);
+
+drawMatrix();cellInfo();drawVenues();
+</script>
+</body>
+</html>

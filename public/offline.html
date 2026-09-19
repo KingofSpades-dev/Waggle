@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waggle — Offline</title>
+<style>
+  body {
+    background: #f7f5ff;
+    color: #191038;
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+  }
+  h1 { font-family: sans-serif; font-size: 32px; color: #7b45d8; }
+  p { color: #61558c; max-width: 480px; font-size: 14px; }
+  button {
+    margin-top: 20px;
+    background: #7b45d8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-family: monospace;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+  <h1>Waggle is offline</h1>
+  <p>You are currently disconnected from the network. Public dashboard data cached previously is available, but new submissions require an active internet connection.</p>
+  <button onclick="window.location.reload()">Retry Connection</button>
+</body>
+</html>
