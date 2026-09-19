@@ -57,9 +57,30 @@ export default function HomePage() {
   const [flashCell, setFlashCell] = useState<{ k: string; h: number } | null>(null);
   const [lastUpdatedSec, setLastUpdatedSec] = useState(0);
 
-  // Venue Table Sorting state
+  // Venue Table State connected to live PostgreSQL DB
+  const [venuesList, setVenuesList] = useState(VENUES);
   const [sortKey, setSortKey] = useState<keyof typeof VENUES[0]>('surv');
   const [sortDir, setSortDir] = useState<-1 | 1>(-1);
+
+  // Fetch live venues from PostgreSQL DB endpoint /v1/venues
+  useEffect(() => {
+    fetch('/v1/venues')
+      .then(res => res.json())
+      .then(json => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          const mapped = json.data.map((v: { name: string; chain: string; launches_count: number; avg_initial_liquidity_usd: number; extraction_pct: number; survival_rate_pct: number }) => ({
+            name: v.name,
+            chain: v.chain === 'sol' ? 'Solana' : (v.chain === 'base' ? 'Base' : (v.chain === 'bnb' ? 'BNB Chain' : (v.chain === 'rh' ? 'Robinhood' : 'Arc'))),
+            perday: v.launches_count || 20,
+            liq: v.avg_initial_liquidity_usd || 4500,
+            extract: v.extraction_pct || 38,
+            surv: v.survival_rate_pct || 45
+          }));
+          setVenuesList(mapped);
+        }
+      })
+      .catch(err => console.warn('[HomePage] Failed to fetch live venues from DB:', err));
+  }, []);
 
   // Dynamic Live Ticking effect
   useEffect(() => {
@@ -127,7 +148,7 @@ export default function HomePage() {
   };
 
   // Sorted venues
-  const sortedVenues = [...VENUES].sort((a, b) => {
+  const sortedVenues = [...venuesList].sort((a, b) => {
     const x = a[sortKey];
     const y = b[sortKey];
     if (typeof x === 'string' && typeof y === 'string') {
@@ -136,7 +157,7 @@ export default function HomePage() {
     return ((x as number) - (y as number)) * sortDir;
   });
 
-  const maxSurv = Math.max(...VENUES.map(v => v.surv));
+  const maxSurv = Math.max(...venuesList.map(v => v.surv));
 
   // Cell info computation
   const selectedChainData: ChainData | undefined = selectedCell
