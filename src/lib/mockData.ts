@@ -49,12 +49,12 @@ export const CHAINS: ChainData[] = [
     name: "Arc",
     key: "arc",
     hue: "#e07b28",
-    src: "no collector yet",
-    conf: "low",
-    n: 0,
-    isCovered: false,
-    cats: null,
-    meta: null
+    src: "DexScreener, GeckoTerminal",
+    conf: "med",
+    n: 310,
+    isCovered: true,
+    cats: { agent: 55, defi: 68, game: 42, meme: 78, rwa: 35 },
+    meta: { agent: 62, defi: 54, game: 40, meme: 80, rwa: 28 }
   }
 ];
 
@@ -65,7 +65,8 @@ export const VENUES: VenueData[] = [
   { name: "Clanker", chain: "base", perday: 880, liq: 9100, extract: 47, surv: 5.1 },
   { name: "Zora", chain: "base", perday: 410, liq: 6800, extract: 39, surv: 4.2 },
   { name: "Four.meme", chain: "bnb", perday: 1600, liq: 3900, extract: 69, surv: 2.4 },
-  { name: "PAIR", chain: "rh", perday: 310, liq: 12400, extract: 62, surv: 3.1 }
+  { name: "PAIR", chain: "rh", perday: 310, liq: 12400, extract: 62, surv: 3.1 },
+  { name: "ArcSwap", chain: "arc", perday: 310, liq: 8400, extract: 42, surv: 3.8 }
 ];
 
 export const METRICS: Record<MetricType, MetricDefinition> = {

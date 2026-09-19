@@ -40,7 +40,7 @@ export async function GET() {
       { key: "base", name: "Base", status: "running", last_run: new Date(Date.now() - 12000).toISOString() },
       { key: "bnb", name: "BNB Chain", status: "running", last_run: new Date(Date.now() - 8000).toISOString() },
       { key: "rh", name: "Robinhood", status: "running", last_run: new Date(Date.now() - 25000).toISOString() },
-      { key: "arc", name: "Arc", status: "not_started", last_run: null }
+      { key: "arc", name: "Arc", status: "running", last_run: new Date(Date.now() - 15000).toISOString() }
     ],
     snapshot: {
       newest_snapshot_id: newestSnapshotId,

@@ -787,11 +787,18 @@ tbody tr:hover {
   background: var(--panel2);
 }
 
+th.num,
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .vname {
   display: flex;
   align-items: center;
   gap: 7px;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .vchip {
@@ -799,23 +806,42 @@ tbody tr:hover {
   height: 7px;
   flex: none;
   transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+.chain-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: var(--panel2);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
 }
 
 .minibar {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .minibar .t {
-  width: 52px;
-  height: 6px;
+  width: 56px;
+  height: 7px;
   background: #ece7fa;
   border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .minibar .f {
   height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
 }
 
 /* Method */

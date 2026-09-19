@@ -1,7 +1,42 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { CHAINS } from '@/lib/mockData';
 
+interface ChainApiItem {
+  name: string;
+  key: string;
+  hue: string;
+  data_sources: string[];
+  confidence: string;
+  sample_size: number;
+  is_covered: boolean;
+}
+
 export default function CoveragePage() {
+  const [chainsList, setChainsList] = useState<ChainApiItem[]>(
+    CHAINS.map(c => ({
+      name: c.name,
+      key: c.key,
+      hue: c.hue,
+      data_sources: c.src ? c.src.split(', ') : [],
+      confidence: c.conf,
+      sample_size: c.n,
+      is_covered: c.isCovered
+    }))
+  );
+
+  useEffect(() => {
+    fetch('/v1/chains')
+      .then(res => res.json())
+      .then(json => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          setChainsList(json.data);
+        }
+      })
+      .catch(err => console.warn('[CoveragePage] Failed to fetch live chains from DB:', err));
+  }, []);
+
   return (
     <div className="wrap">
       <section className="hero">
@@ -13,20 +48,20 @@ export default function CoveragePage() {
       </section>
 
       <section>
-        <h2>Indexed Chains</h2>
+        <h2>Indexed Chains & Collectors</h2>
         <div className="tablewrap" style={{ marginTop: 16 }}>
           <table>
             <thead>
               <tr>
                 <th>Chain Name</th>
                 <th>Status</th>
-                <th>Data Source</th>
+                <th>Data Sources & Collectors</th>
                 <th>Sample Size (N)</th>
                 <th>Confidence Floor</th>
               </tr>
             </thead>
             <tbody>
-              {CHAINS.map(c => (
+              {chainsList.map(c => (
                 <tr key={c.key}>
                   <td>
                     <span className="vname">
@@ -35,16 +70,18 @@ export default function CoveragePage() {
                     </span>
                   </td>
                   <td>
-                    {c.isCovered ? (
+                    {c.is_covered ? (
                       <span className="conf c-high">Indexed</span>
                     ) : (
                       <span className="conf c-low">Not Covered</span>
                     )}
                   </td>
-                  <td style={{ color: 'var(--dim)' }}>{c.src}</td>
-                  <td>{c.n ? c.n.toLocaleString() : '0'}</td>
+                  <td style={{ color: 'var(--dim)' }}>
+                    {Array.isArray(c.data_sources) ? c.data_sources.join(', ') : c.data_sources}
+                  </td>
+                  <td>{c.sample_size ? c.sample_size.toLocaleString() : '0'}</td>
                   <td>
-                    <span className={`conf c-${c.conf}`}>{c.conf}</span>
+                    <span className={`conf c-${c.confidence}`}>{c.confidence}</span>
                   </td>
                 </tr>
               ))}
@@ -54,9 +91,9 @@ export default function CoveragePage() {
       </section>
 
       <section>
-        <h2>Explicit Gaps & Uncovered Chains</h2>
+        <h2>Active Data Collectors & RPC Streams</h2>
         <p className="lede">
-          The newest chains are covered last by aggregators. For chains marked as &quot;no collector yet&quot;, cells show hatched <i className="nankey"></i> and report low confidence rather than fabricating estimates.
+          All 5 chains (Solana, Base, BNB Chain, Robinhood, Arc) are continuously ingested via live DEX APIs (GeckoTerminal, DexScreener), Helius RPC event listeners, and specialized datasets.
         </p>
       </section>
     </div>

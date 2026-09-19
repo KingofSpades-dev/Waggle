@@ -70,7 +70,36 @@ async function runSingleCycle() {
     stats.dailyGeckoCalls++;
     const basePools = baseData.data || [];
 
-    // 4. Helius RPC Check (High-speed Solana event listener)
+    await SLEEP_MS(1500);
+
+    // 4. GeckoTerminal BSC (BNB Chain) New Pools
+    console.log('[Waggle Daemon] Ingesting GeckoTerminal BSC (BNB Chain) new pools...');
+    const bnbData = await fetchWithRetry(`${process.env.GECKOTERMINAL_API_BASE_URL || 'https://api.geckoterminal.com/api/v2'}/networks/bsc/new_pools?page=1`);
+    stats.dailyGeckoCalls++;
+    const bnbPools = bnbData.data || [];
+
+    await SLEEP_MS(1500);
+
+    // 5. DexScreener Arc DEX Pairs
+    console.log('[Waggle Daemon] Ingesting DexScreener Arc DEX pairs...');
+    let arcPools = [];
+    try {
+      const arcData = await fetchWithRetry('https://api.dexscreener.com/latest/dex/search?q=arc');
+      stats.dailyGeckoCalls++;
+      arcPools = (arcData?.pairs || []).map(p => ({
+        attributes: {
+          name: p.baseToken?.name || 'Arc Token',
+          address: p.pairAddress,
+          reserve_in_usd: (p.liquidity?.usd || 0).toString(),
+          pool_created_at: p.pairCreatedAt ? new Date(p.pairCreatedAt).toISOString() : new Date().toISOString()
+        },
+        relationships: { network: { data: { id: 'arc' } } }
+      }));
+    } catch (e) {
+      console.warn('[Waggle Daemon] Could not fetch Arc pairs from DexScreener:', e.message);
+    }
+
+    // 6. Helius RPC Check (High-speed Solana event listener)
     const heliusKey = process.env.HELIUS_API_KEY;
     if (heliusKey) {
       const heliusRes = await fetchWithRetry(`https://mainnet.helius-rpc.com/?api-key=${heliusKey}`, {
@@ -82,7 +111,7 @@ async function runSingleCycle() {
       console.log(`[Waggle Daemon] Helius RPC Status: OK (Slot #${heliusRes.result})`);
     }
 
-    // 5. Database Upsert & Deduplication
+    // 7. Database Upsert & Deduplication across all 5 chains
     console.log('[Waggle Daemon] Upserting launch data into PostgreSQL DB...');
     const chainRows = await client.query('SELECT id, key FROM chains;');
     const venueRows = await client.query('SELECT id, key FROM venues;');
@@ -93,15 +122,33 @@ async function runSingleCycle() {
 
     let newLaunchesCount = 0;
 
-    for (const poolItem of [...solPools, ...basePools]) {
+    for (const poolItem of [...solPools, ...basePools, ...bnbPools, ...arcPools]) {
       const attr = poolItem.attributes || {};
-      const isSol = poolItem.relationships?.network?.data?.id === 'solana' || attr.name?.includes('SOL');
-      const chainKey = isSol ? 'sol' : 'base';
+      const networkId = (poolItem.relationships?.network?.data?.id || '').toLowerCase();
+      const dexId = (poolItem.relationships?.dex?.data?.id || '').toLowerCase();
+      const poolName = (attr.name || '').toLowerCase();
+
+      const isSol = networkId === 'solana' || poolName.includes('sol');
+      const isBnb = networkId === 'bsc' || poolName.includes('bnb');
+      const isArc = networkId === 'arc' || poolName.includes('arc');
+      const chainKey = isSol ? 'sol' : (isBnb ? 'bnb' : (isArc ? 'arc' : 'base'));
       const chainId = chainMap[chainKey];
 
-      let venueKey = isSol ? 'pump_fun' : 'clanker';
-      if (attr.name?.toLowerCase().includes('bonk')) venueKey = 'bonk_fun';
-      if (attr.name?.toLowerCase().includes('zora')) venueKey = 'zora';
+      let venueKey = 'pump_fun';
+      if (chainKey === 'sol') {
+        if (dexId.includes('bonk') || poolName.includes('bonk')) venueKey = 'bonk_fun';
+        else if (dexId.includes('bag') || poolName.includes('bags')) venueKey = 'bags';
+        else venueKey = 'pump_fun';
+      } else if (chainKey === 'base') {
+        if (dexId.includes('zora') || poolName.includes('zora')) venueKey = 'zora';
+        else venueKey = 'clanker';
+      } else if (chainKey === 'bnb') {
+        venueKey = 'four_meme';
+      } else if (chainKey === 'rh') {
+        venueKey = 'pair';
+      } else if (chainKey === 'arc') {
+        venueKey = 'arc_swap';
+      }
 
       const venueId = venueMap[venueKey] || venueRows.rows[0]?.id;
       const createdAt = attr.pool_created_at ? new Date(attr.pool_created_at) : new Date();
@@ -111,7 +158,7 @@ async function runSingleCycle() {
         const insertRes = await client.query(`
           INSERT INTO launches (chain_id, venue_id, token_address, pool_address, block_number, block_timestamp, launch_hour_utc, initial_liquidity_usd)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-          ON CONFLICT (id) DO UPDATE SET initial_liquidity_usd = EXCLUDED.initial_liquidity_usd
+          ON CONFLICT (pool_address) DO UPDATE SET initial_liquidity_usd = EXCLUDED.initial_liquidity_usd
           RETURNING id;
         `, [
           chainId,
@@ -128,14 +175,27 @@ async function runSingleCycle() {
       }
     }
 
-    stats.totalLaunchesSaved += newLaunchesCount;
+    // Query real total count and sample sizes per chain from database
+    const dbCountRes = await client.query('SELECT COUNT(*) FROM launches');
+    stats.dailyDbQueries++;
+    const realTotalSaved = parseInt(dbCountRes.rows[0]?.count || '0', 10);
+
+    const chainCountsRes = await client.query(`
+      SELECT c.key, COUNT(l.id) as count
+      FROM chains c
+      LEFT JOIN launches l ON l.chain_id = c.id
+      GROUP BY c.key
+    `);
+    stats.dailyDbQueries++;
+    const chainCountsMap = Object.fromEntries(chainCountsRes.rows.map(r => [r.key, parseInt(r.count, 10)]));
 
     // 6. Hourly Immutable Snapshot Generation
     console.log('[Waggle Daemon] Generating immutable metrics snapshot...');
     const snapshotPayload = {
       timestamp: new Date().toISOString(),
-      sample_sizes: { sol: solPools.length, base: basePools.length, bnb: 2100, rh: 340, arc: 0 },
+      sample_sizes: chainCountsMap,
       cycle_launches_count: newLaunchesCount,
+      total_saved_launches: realTotalSaved,
       contributing_adapters: ['DefiLlamaAdapter', 'GeckoTerminalAdapter', 'HeliusRPCListener']
     };
 
@@ -155,7 +215,7 @@ async function runSingleCycle() {
 
     console.log(`\n📊 [Waggle Daemon Quota & Health Summary]`);
     console.log(`- Cycle #${stats.totalCycles} Finished in ${new Date().toISOString()}`);
-    console.log(`- New Launches Processed: ${newLaunchesCount} (Total Saved: ${stats.totalLaunchesSaved})`);
+    console.log(`- New Launches Processed: ${newLaunchesCount} (Total Saved in DB: ${realTotalSaved})`);
     console.log(`- Estimated Daily Helius RPC Usage: ~${estDailyRpc} calls/day (Safe limit: 100,000/day)`);
     console.log(`- Estimated Daily DB Queries: ~${estDailyDb} queries/day (Safe limit: Pooled DB)`);
     console.log(`- Next cycle in 5 minutes...`);

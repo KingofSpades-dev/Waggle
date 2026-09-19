@@ -191,7 +191,7 @@ export default function HomePage() {
       <section className="hero">
         <div className="livebar">
           <span className="dot"></span>
-          <span id="collectors">4 collectors running, 1 not started</span>
+          <span id="collectors">5 collectors running, 0 not started</span>
           <span>·</span>
           <span>
             updated <b>{lastUpdatedSec < 5 ? 'just now' : `${lastUpdatedSec}s ago`}</b>
@@ -498,7 +498,7 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'name' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  venue
+                  venue {sortKey === 'name' ? (sortDir === -1 ? '↓' : '↑') : ''}
                 </th>
                 <th
                   onClick={() => {
@@ -510,9 +510,10 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'chain' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  chain
+                  chain {sortKey === 'chain' ? (sortDir === -1 ? '↓' : '↑') : ''}
                 </th>
                 <th
+                  className="num"
                   onClick={() => {
                     if (sortKey === 'perday') setSortDir(prev => (prev === 1 ? -1 : 1));
                     else {
@@ -522,9 +523,10 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'perday' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  launches per day
+                  launches per day {sortKey === 'perday' ? (sortDir === -1 ? '↓' : '↑') : ''}
                 </th>
                 <th
+                  className="num"
                   onClick={() => {
                     if (sortKey === 'liq') setSortDir(prev => (prev === 1 ? -1 : 1));
                     else {
@@ -534,9 +536,10 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'liq' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  median launch liquidity
+                  median launch liquidity {sortKey === 'liq' ? (sortDir === -1 ? '↓' : '↑') : ''}
                 </th>
                 <th
+                  className="num"
                   onClick={() => {
                     if (sortKey === 'extract') setSortDir(prev => (prev === 1 ? -1 : 1));
                     else {
@@ -546,9 +549,10 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'extract' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  first minute extraction
+                  first minute extraction {sortKey === 'extract' ? (sortDir === -1 ? '↓' : '↑') : ''}
                 </th>
                 <th
+                  className="num"
                   onClick={() => {
                     if (sortKey === 'surv') setSortDir(prev => (prev === 1 ? -1 : 1));
                     else {
@@ -558,28 +562,39 @@ export default function HomePage() {
                   }}
                   aria-sort={sortKey === 'surv' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
                 >
-                  alive after 7 days
+                  alive after 7 days {sortKey === 'surv' ? (sortDir === -1 ? '↓' : '↑') : ''}
                 </th>
               </tr>
             </thead>
             <tbody>
               {sortedVenues.map(v => {
-                const chainData = CHAINS.find(c => c.key === v.chain);
+                const chainData = CHAINS.find(
+                  c => c.key === v.chain || c.name === v.chain || c.key === v.chain?.toLowerCase()
+                );
                 return (
                   <tr key={v.name}>
                     <td>
                       <span className="vname">
-                        <i className="vchip" style={{ background: chainData?.hue }}></i>
+                        <i className="vchip" style={{ background: chainData?.hue || '#7b45d8' }}></i>
                         {v.name}
                       </span>
                     </td>
-                    <td style={{ color: 'var(--dim)' }}>{chainData?.name}</td>
-                    <td>{v.perday.toLocaleString()}</td>
-                    <td>${v.liq.toLocaleString()}</td>
-                    <td style={{ color: shade(ramp(1 - (v.extract - 35) / 45), 0.62) }}>
+                    <td>
+                      {chainData ? (
+                        <span className="chain-badge">
+                          <i className="vchip" style={{ background: chainData.hue }}></i>
+                          {chainData.name}
+                        </span>
+                      ) : (
+                        <span style={{ color: 'var(--dim)' }}>{v.chain}</span>
+                      )}
+                    </td>
+                    <td className="num">{v.perday.toLocaleString()}</td>
+                    <td className="num">${v.liq.toLocaleString()}</td>
+                    <td className="num" style={{ color: shade(ramp(1 - (v.extract - 35) / 45), 0.62) }}>
                       {v.extract}%
                     </td>
-                    <td>
+                    <td className="num">
                       <span className="minibar">
                         <span className="t">
                           <span

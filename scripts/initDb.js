@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS reports (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_launches_chain_venue ON launches(chain_id, venue_id, block_timestamp DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_launches_pool_address ON launches(pool_address);
 CREATE INDEX IF NOT EXISTS idx_trades_launch_seconds ON trades_first_hour(launch_id, seconds_after_launch);
 CREATE INDEX IF NOT EXISTS idx_snapshots_latest ON metrics_snapshots(snapshot_time DESC);
 CREATE INDEX IF NOT EXISTS idx_submissions_ttl ON submissions(expires_at);
