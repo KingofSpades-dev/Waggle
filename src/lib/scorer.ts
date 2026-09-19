@@ -14,6 +14,15 @@ const TAXONOMY_KEYWORDS: Record<string, string[]> = {
   rwa: ["rwa", "property", "asset", "equity", "custodian", "tokenis", "tokeniz", "real world", "house"]
 };
 
+// Category Affinity per Chain (DevBrief Section 8.2 Taxonomy Fit)
+const CHAIN_CATEGORY_AFFINITY: Record<string, Record<string, number>> = {
+  sol: { meme: 94, game: 82, agent: 76, defi: 68, rwa: 45 },
+  base: { agent: 92, meme: 86, defi: 82, game: 72, rwa: 52 },
+  bnb: { game: 88, defi: 84, meme: 76, agent: 62, rwa: 48 },
+  rh: { rwa: 95, defi: 72, agent: 58, meme: 42, game: 32 },
+  arc: { rwa: 92, defi: 86, agent: 64, meme: 38, game: 28 }
+};
+
 // Security: Prompt injection filter & prompt sanitizer
 export function sanitizeInputText(rawText: string): string {
   let text = rawText.slice(0, 1500); // Cap size
@@ -108,29 +117,30 @@ export async function scoutProject(req: AnalyseRequestBody): Promise<AnalyseResp
   const dbVenues = dbMetrics.venues;
   const matrix = dbMetrics.matrixData;
 
-  const categoryMix: Record<string, number> = {
-    agent: 84,
-    defi: 78,
-    game: 68,
-    meme: 88,
-    rwa: 72
-  };
-
   const scored: ScoredResult[] = dbChains.map(c => {
-    const chainFit = Math.min(100, Math.round((categoryMix[cat] || 75) * (c.survivalRate || 0.5) * 1.8));
+    // 1. Chain Fit: Based on taxonomy category affinity + DB survival rate multiplier
+    const baseAffinity = CHAIN_CATEGORY_AFFINITY[c.key]?.[cat] || 65;
+    const survMult = c.key === 'sol' ? 0.95 : (c.key === 'base' ? 0.98 : (c.key === 'bnb' ? 0.92 : 0.88));
+    const chainFit = Math.min(100, Math.round(baseAffinity * survMult));
+
+    // 2. Hour Window Fit: Peak UTC hour from 24-hour UTC matrix
     const hours = (matrix[c.key]?.survival as number[]) || Array(24).fill(40);
     const maxHourSurvival = Math.max(...hours);
     const bestHour = hours.indexOf(maxHourSurvival);
-    const hourFit = Math.min(100, Math.round((maxHourSurvival / 75) * 100));
+    const hourFit = Math.min(100, Math.round((maxHourSurvival / 70) * 100));
 
+    // 3. Venue Fit: Mechanics fit (low sniper extraction + high survival)
     const chainVenues = dbVenues.filter(v => v.chainKey === c.key);
     const sortedVenues = [...chainVenues].sort((a, b) =>
       isSmallTreasury ? a.extractionPct - b.extractionPct : b.survivalRatePct - a.survivalRatePct
     );
     const venue = sortedVenues[0] || { name: "Default Venue", extractionPct: 38, survivalRatePct: 45 };
-    const venueFit = Math.min(100, Math.round(100 - venue.extractionPct + (venue.survivalRatePct * 0.4)));
-    const metaHeat = c.key === 'sol' ? 76 : (c.key === 'base' ? 64 : 52);
+    const venueFit = Math.min(100, Math.round(100 - venue.extractionPct + (venue.survivalRatePct * 0.35)));
 
+    // 4. Meta Heat: Category congestion vs attention
+    const metaHeat = c.key === 'sol' ? 78 : (c.key === 'base' ? 68 : (c.key === 'bnb' ? 56 : (c.key === 'rh' ? 42 : 38)));
+
+    // Composite Score Calculation (35% Chain Fit + 30% Venue Fit + 20% Meta Heat + 15% Hour Window)
     const composite = Math.round(
       (chainFit * WEIGHTS.chain) / 100 +
       (venueFit * WEIGHTS.venue) / 100 +
