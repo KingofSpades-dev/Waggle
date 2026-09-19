@@ -10,6 +10,7 @@ import {
   MATRIX_DATA
 } from '@/lib/mockData';
 import { MetricType, AnalyseResponseBody, ChainData } from '@/lib/types';
+import HoneycombAmbient from '@/components/HoneycombAmbient';
 
 // Color Ramp Logic matching waggle.html STOPS
 const STOPS = [
@@ -234,6 +235,7 @@ export default function HomePage() {
     <div className="wrap">
       {/* Hero Section */}
       <section className="hero">
+        <HoneycombAmbient />
         <div className="livebar">
           <span className="dot"></span>
           <span id="collectors">5 collectors running, 0 not started</span>
@@ -241,12 +243,17 @@ export default function HomePage() {
           <span>
             updated <b>{lastUpdatedSec < 5 ? 'just now' : `${lastUpdatedSec}s ago`}</b>
           </span>
-          <span className="pill">v1.0 live engine</span>
+          <span className="pill">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: 5 }}>
+              <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+            </svg>
+            v1.0 live engine
+          </span>
         </div>
         <h1>
           Too many chains.<br />
           Too many launchpads.<br />
-          <em>One honest answer.</em>
+          <em>Waggle tells you which one is the best for your project.</em>
         </h1>
         <p className="lede">
           Describe what you built. Waggle scores it against where surviving launches actually happen, then tells you the chain, the venue, and the hour window that fit its shape. It will not tell you whether it will work, because nothing in this data can.
@@ -264,8 +271,13 @@ export default function HomePage() {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleScout();
               }}
             />
-            <button className="go" onClick={() => handleScout()} disabled={isPending}>
-              {isPending ? 'Scouting...' : 'Scout it'}
+            <button className={`go ${isPending ? 'is-loading' : ''}`} onClick={() => handleScout()} disabled={isPending}>
+              <span className="go-hex-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+                </svg>
+              </span>
+              <span>{isPending ? 'Scouting...' : 'Scout it'}</span>
             </button>
           </div>
 
@@ -838,7 +850,7 @@ export default function HomePage() {
           <div className="never-left">
             <span className="never-tag">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polygon points="12,2 21,7.2 21,16.8 12,22 3,16.8 3,7.2" />
               </svg>
               Integrity Invariants
             </span>
@@ -849,8 +861,8 @@ export default function HomePage() {
             <div className="never-guarantee">
               <div className="never-guarantee-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  <path d="m9 12 2 2 4-4"/>
+                  <polygon points="12,2 21,7.2 21,16.8 12,22 3,16.8 3,7.2" />
+                  <polyline points="8 12 11 15 16 9" />
                 </svg>
               </div>
               <div>
@@ -863,9 +875,9 @@ export default function HomePage() {
           <div className="never-items">
             <div className="never-item">
               <div className="never-item-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12,2 21,7.2 21,16.8 12,22 3,16.8 3,7.2" />
+                  <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
                 </svg>
               </div>
               <div className="never-item-text">
@@ -876,9 +888,9 @@ export default function HomePage() {
 
             <div className="never-item">
               <div className="never-item-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12,2 21,7.2 21,16.8 12,22 3,16.8 3,7.2" />
+                  <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
                 </svg>
               </div>
               <div className="never-item-text">
@@ -889,9 +901,9 @@ export default function HomePage() {
 
             <div className="never-item">
               <div className="never-item-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12,2 21,7.2 21,16.8 12,22 3,16.8 3,7.2" />
+                  <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
                 </svg>
               </div>
               <div className="never-item-text">
@@ -902,9 +914,9 @@ export default function HomePage() {
 
             <div className="never-item">
               <div className="never-item-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12,2 21,7.2 21,16.8 12,22 3,16.8 3,7.2" />
+                  <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
                 </svg>
               </div>
               <div className="never-item-text">
@@ -915,9 +927,9 @@ export default function HomePage() {
 
             <div className="never-item">
               <div className="never-item-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12,2 21,7.2 21,16.8 12,22 3,16.8 3,7.2" />
+                  <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
                 </svg>
               </div>
               <div className="never-item-text">
