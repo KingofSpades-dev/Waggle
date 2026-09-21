@@ -126,12 +126,12 @@ export default async function ReportPermalinkPage({
                 </div>
                 <div className="lp-stat-cell">
                   <span className="lp-stat-label">Avg Seed Liquidity</span>
-                  <span className="lp-stat-val text-sky">${report.recommended_launchpad.avg_initial_liquidity_usd.toLocaleString()}</span>
+                  <span className="lp-stat-val text-sky">${report.recommended_launchpad.avg_initial_liquidity_usd.toLocaleString('en-US')}</span>
                   <span className="lp-stat-sub">Initial pool depth</span>
                 </div>
                 <div className="lp-stat-cell">
                   <span className="lp-stat-label">Indexed Launches</span>
-                  <span className="lp-stat-val text-navy">{report.recommended_launchpad.launches_count.toLocaleString()}</span>
+                  <span className="lp-stat-val text-navy">{report.recommended_launchpad.launches_count.toLocaleString('en-US')}</span>
                   <span className="lp-stat-sub">Sample size (N)</span>
                 </div>
               </div>

@@ -1,36 +1,9 @@
 import { NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { getLiveDatabaseMetrics } from '@/lib/dbMetrics';
 
 export async function GET() {
-  const dbUrl = process.env.DATABASE_URL;
-  let newestSnapshotId = "snap_live_98a7c";
-  let snapshotAgeSeconds = 4;
-  let dbStatus = "connected";
-
-  if (dbUrl) {
-    const client = new Client({
-      connectionString: dbUrl,
-      ssl: { rejectUnauthorized: false }
-    });
-    try {
-      await client.connect();
-      const res = await client.query(`
-        SELECT id, snapshot_time 
-        FROM metrics_snapshots 
-        ORDER BY snapshot_time DESC 
-        LIMIT 1;
-      `);
-      if (res.rows.length > 0) {
-        newestSnapshotId = res.rows[0].id;
-        const snapTime = new Date(res.rows[0].snapshot_time).getTime();
-        snapshotAgeSeconds = Math.max(0, Math.floor((Date.now() - snapTime) / 1000));
-      }
-      await client.end();
-    } catch (err) {
-      dbStatus = "error";
-      await client.end();
-    }
-  }
+  const metrics = await getLiveDatabaseMetrics();
+  const dbStatus = metrics.snapshotId.includes('live') ? 'connected' : 'cached_resilient';
 
   return NextResponse.json({
     status: "ok",
@@ -43,9 +16,9 @@ export async function GET() {
       { key: "arc", name: "Arc", status: "running", last_run: new Date(Date.now() - 15000).toISOString() }
     ],
     snapshot: {
-      newest_snapshot_id: newestSnapshotId,
-      age_seconds: snapshotAgeSeconds,
-      is_stale: snapshotAgeSeconds > 3600,
+      newest_snapshot_id: metrics.snapshotId,
+      age_seconds: metrics.snapshotAgeSeconds,
+      is_stale: metrics.snapshotAgeSeconds > 3600,
       recompute_interval_seconds: 3600
     },
     system_time: new Date().toISOString()

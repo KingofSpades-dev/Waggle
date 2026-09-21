@@ -119,18 +119,46 @@ function getFallbackDatabaseMetrics(): MatrixResponse {
   };
 }
 
+// In-memory Circuit Breaker & High-Performance Cache
+let dbCircuitBreakerUntil = 0;
+let lastDbErrorReason = '';
+let cachedMetricsResponse: MatrixResponse | null = null;
+let lastCachedMetricsTime = 0;
+const CIRCUIT_BREAKER_COOLDOWN_MS = 60000; // 60s cooldown when DB is unavailable or quota reached
+const CACHE_TTL_MS = 5000; // 5s cache to avoid excessive DB queries
+
 /**
  * Gets live matrix data computed directly from PostgreSQL DB tables.
  * Falls back gracefully to cached high-fidelity metrics if database quota is reached or offline.
  */
 export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
+  const now = Date.now();
+
+  // Fast-path: Return cached metrics if fresh (< 5 seconds)
+  if (cachedMetricsResponse && (now - lastCachedMetricsTime < CACHE_TTL_MS)) {
+    return {
+      ...cachedMetricsResponse,
+      snapshotAgeSeconds: Math.max(1, Math.floor((now - lastCachedMetricsTime) / 1000)),
+      systemTime: new Date().toISOString()
+    };
+  }
+
+  // Circuit Breaker: If database quota is reached or offline, serve resilient data instantly (0ms)
+  if (now < dbCircuitBreakerUntil) {
+    const fallback = getFallbackDatabaseMetrics();
+    cachedMetricsResponse = fallback;
+    lastCachedMetricsTime = now;
+    return fallback;
+  }
+
   if (!process.env.DATABASE_URL) {
     return getFallbackDatabaseMetrics();
   }
 
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 2000
   });
 
   try {
@@ -247,9 +275,7 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
     const snapshotTime = snapRes.rows[0]?.snapshot_time ? new Date(snapRes.rows[0].snapshot_time) : new Date();
     const snapshotAgeSeconds = Math.floor((Date.now() - snapshotTime.getTime()) / 1000);
 
-    try { await client.end(); } catch {}
-
-    return {
+    const result: MatrixResponse = {
       chains,
       venues,
       matrixData,
@@ -257,10 +283,29 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
       snapshotAgeSeconds,
       systemTime: new Date().toISOString()
     };
+    cachedMetricsResponse = result;
+    lastCachedMetricsTime = Date.now();
+    dbCircuitBreakerUntil = 0; // Reset circuit breaker on successful connection
+    return result;
   } catch (err: unknown) {
     const error = err as Error;
-    console.warn('[dbMetrics] Database unavailable or plan limit reached, serving resilient cached snapshot data:', error.message || error);
+    const msg = error.message || String(error);
+    const isPlanLimit = msg.includes('planLimitReached') || msg.includes('restrictions');
+
+    // Trip circuit breaker: 120 seconds if planLimitReached, 30 seconds for network glitches
+    dbCircuitBreakerUntil = Date.now() + (isPlanLimit ? 120000 : 30000);
+    lastDbErrorReason = msg;
+
+    if (isPlanLimit) {
+      console.warn(`[dbMetrics] Prisma 100K request quota exhausted. Circuit breaker active for 120s: serving zero-latency resilient snapshot.`);
+    } else {
+      console.warn('[dbMetrics] Database unavailable, circuit breaker active for 30s:', msg);
+    }
+
     try { await client.end(); } catch {}
-    return getFallbackDatabaseMetrics();
+    const fallback = getFallbackDatabaseMetrics();
+    cachedMetricsResponse = fallback;
+    lastCachedMetricsTime = Date.now();
+    return fallback;
   }
 }

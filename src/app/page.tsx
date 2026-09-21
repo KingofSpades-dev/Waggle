@@ -422,12 +422,12 @@ export default function HomePage() {
                     </div>
                     <div className="lp-stat-cell">
                       <span className="lp-stat-label">Avg Seed Liquidity</span>
-                      <span className="lp-stat-val text-sky">${report.recommended_launchpad.avg_initial_liquidity_usd.toLocaleString()}</span>
+                      <span className="lp-stat-val text-sky">${report.recommended_launchpad.avg_initial_liquidity_usd.toLocaleString('en-US')}</span>
                       <span className="lp-stat-sub">Initial pool depth</span>
                     </div>
                     <div className="lp-stat-cell">
                       <span className="lp-stat-label">Indexed Launches</span>
-                      <span className="lp-stat-val text-navy">{report.recommended_launchpad.launches_count.toLocaleString()}</span>
+                      <span className="lp-stat-val text-navy">{report.recommended_launchpad.launches_count.toLocaleString('en-US')}</span>
                       <span className="lp-stat-sub">Sample size (N)</span>
                     </div>
                   </div>
@@ -622,7 +622,7 @@ export default function HomePage() {
                   {METRICS[metric].fmt(lo)} to {METRICS[metric].fmt(hi)}
                 </div>
                 <div>sample size</div>
-                <div>{selectedChainData?.n ? selectedChainData.n.toLocaleString() : '0'}</div>
+                <div>{selectedChainData?.n ? selectedChainData.n.toLocaleString('en-US') : '0'}</div>
                 <div>confidence</div>
                 <div>
                   <span className={`conf c-${selectedChainData?.conf}`}>{selectedChainData?.conf}</span>
@@ -768,11 +768,11 @@ export default function HomePage() {
                       )}
                     </td>
                     <td className="num">
-                      <span className="perday-val">{v.perday.toLocaleString()}</span>
-                      <span className="perday-sub">launches / day</span>
+                      <span className="perday-val">{v.perday.toLocaleString('en-US')}</span>
+                      <span className="perday-sub">avg / day</span>
                     </td>
                     <td className="num">
-                      <span className="liq-val">${v.liq.toLocaleString()}</span>
+                      <span className="liq-val">${v.liq.toLocaleString('en-US')}</span>
                     </td>
                     <td className="num">
                       <span className={`extract-pill ${v.extract < 35 ? 'ext-good' : (v.extract < 40 ? 'ext-mid' : 'ext-high')}`}>
