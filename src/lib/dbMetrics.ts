@@ -32,6 +32,54 @@ export interface MatrixResponse {
   systemTime: string;
 }
 
+interface ChainHourProfile {
+  peakHour: number;
+  subPeakHour: number;
+  baseSurv: number;
+  peakLaunches: number;
+  baseLaunches: number;
+  baseLiq: number;
+}
+
+const CHAIN_HOUR_PROFILES: Record<string, ChainHourProfile> = {
+  sol: { peakHour: 19, subPeakHour: 2, baseSurv: 50, peakLaunches: 28, baseLaunches: 12, baseLiq: 5800 },
+  base: { peakHour: 14, subPeakHour: 21, baseSurv: 46, peakLaunches: 24, baseLaunches: 10, baseLiq: 6400 },
+  bnb: { peakHour: 4, subPeakHour: 12, baseSurv: 38, peakLaunches: 22, baseLaunches: 9, baseLiq: 4100 },
+  rh: { peakHour: 16, subPeakHour: 18, baseSurv: 58, peakLaunches: 16, baseLaunches: 6, baseLiq: 14500 },
+  arc: { peakHour: 10, subPeakHour: 8, baseSurv: 42, peakLaunches: 14, baseLaunches: 5, baseLiq: 5200 }
+};
+
+export function generateChainHourlyData(ck: string) {
+  const prof = CHAIN_HOUR_PROFILES[ck] || { peakHour: 14, subPeakHour: 20, baseSurv: 44, peakLaunches: 18, baseLaunches: 8, baseLiq: 5000 };
+  
+  const survival: number[] = [];
+  const launches: number[] = [];
+  const liquidity: number[] = [];
+  const extraction: number[] = [];
+
+  for (let h = 0; h < 24; h++) {
+    const dist1 = Math.min(Math.abs(h - prof.peakHour), 24 - Math.abs(h - prof.peakHour));
+    const dist2 = Math.min(Math.abs(h - prof.subPeakHour), 24 - Math.abs(h - prof.subPeakHour));
+
+    const peakWeight = Math.exp(-(dist1 * dist1) / 14);
+    const subWeight = Math.exp(-(dist2 * dist2) / 18);
+
+    const surv = prof.baseSurv + (peakWeight * 16) + (subWeight * 6) + (((h * 13) % 7) * 0.25);
+    survival.push(parseFloat(surv.toFixed(1)));
+
+    const launchCnt = Math.round(prof.baseLaunches + (peakWeight * (prof.peakLaunches - prof.baseLaunches)) + (subWeight * 4));
+    launches.push(launchCnt);
+
+    const liq = Math.round(prof.baseLiq * (0.8 + (peakWeight * 0.45) + (subWeight * 0.15)));
+    liquidity.push(liq);
+
+    const extract = 44 - (peakWeight * 12) - (subWeight * 4) + (((h * 11) % 5) * 0.6);
+    extraction.push(parseFloat(extract.toFixed(1)));
+  }
+
+  return { survival, launches, liquidity, extraction };
+}
+
 /**
  * Gets live matrix data computed directly from PostgreSQL DB tables
  */
@@ -58,13 +106,7 @@ function getFallbackDatabaseMetrics(): MatrixResponse {
   const matrixData: Record<string, Record<string, (number | null)[]>> = {};
   const chainKeys = ['sol', 'base', 'bnb', 'rh', 'arc'];
   for (const ck of chainKeys) {
-    const baseSurv = ck === 'sol' ? 52 : (ck === 'base' ? 44 : (ck === 'bnb' ? 38 : (ck === 'rh' ? 58 : 41)));
-    matrixData[ck] = {
-      survival: Array.from({ length: 24 }, (_, h) => parseFloat((baseSurv + Math.sin(h / 3.8) * 12 + (h % 3)).toFixed(1))),
-      launches: Array.from({ length: 24 }, (_, h) => Math.floor(Math.sin((h + 4) / 3.5) * 8 + 14)),
-      liquidity: Array.from({ length: 24 }, (_, h) => Math.round(4200 + Math.cos(h / 4) * 1800)),
-      extraction: Array.from({ length: 24 }, (_, h) => parseFloat((38 + Math.cos(h / 2.5) * 8).toFixed(1)))
-    };
+    matrixData[ck] = generateChainHourlyData(ck);
   }
 
   return {
@@ -182,19 +224,19 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
 
     // Fill default realistic pattern for hours without raw events yet
     for (const ck of chainKeys) {
+      const generated = generateChainHourlyData(ck);
       for (let h = 0; h < 24; h++) {
         if (matrixData[ck].survival[h] === null) {
-          const baseSurv = ck === 'sol' ? 52 : (ck === 'base' ? 44 : (ck === 'bnb' ? 38 : (ck === 'rh' ? 58 : 41)));
-          matrixData[ck].survival[h] = parseFloat((baseSurv + Math.sin(h / 3.8) * 12 + (h % 3)).toFixed(1));
+          matrixData[ck].survival[h] = generated.survival[h];
         }
         if (matrixData[ck].launches[h] === null) {
-          matrixData[ck].launches[h] = Math.floor(Math.sin((h + 4) / 3.5) * 8 + 12);
+          matrixData[ck].launches[h] = generated.launches[h];
         }
         if (matrixData[ck].liquidity[h] === null) {
-          matrixData[ck].liquidity[h] = Math.round(4200 + Math.cos(h / 4) * 1800);
+          matrixData[ck].liquidity[h] = generated.liquidity[h];
         }
         if (matrixData[ck].extraction[h] === null) {
-          matrixData[ck].extraction[h] = parseFloat((38 + Math.cos(h / 2.5) * 8).toFixed(1));
+          matrixData[ck].extraction[h] = generated.extraction[h];
         }
       }
     }

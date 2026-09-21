@@ -47,6 +47,33 @@ export interface AnalyseRequestBody {
   };
 }
 
+export interface LaunchpadFitDetail {
+  name: string;
+  key: string;
+  chain_name: string;
+  chain_key: string;
+  curve_type: string;
+  curve_display: string;
+  survival_rate_pct: number;
+  avg_initial_liquidity_usd: number;
+  extraction_pct: number;
+  launches_count: number;
+  mechanics_summary: string;
+  fit_reason: string;
+  recommendation_badge: string;
+}
+
+export interface AlternativeLaunchpad {
+  name: string;
+  key: string;
+  chain_name: string;
+  chain_key: string;
+  curve_type: string;
+  survival_rate_pct: number;
+  extraction_pct: number;
+  launches_count: number;
+}
+
 export interface AnalyseResponseBody {
   verdict: {
     chain_name: string;
@@ -55,6 +82,8 @@ export interface AnalyseResponseBody {
     hour_utc: number;
     composite_score: number;
   };
+  recommended_launchpad?: LaunchpadFitDetail;
+  alternative_launchpads?: AlternativeLaunchpad[];
   dimensions: {
     chain_fit: number;
     venue_fit: number;
@@ -65,6 +94,7 @@ export interface AnalyseResponseBody {
   confidence: 'high' | 'med' | 'low';
   confidence_caveat: string;
   meta_reading: string;
+  read_as?: string;
   alternatives: Array<{ chain_name: string; composite_score: number }>;
   classified_category: string;
   is_weak_signal: boolean;
