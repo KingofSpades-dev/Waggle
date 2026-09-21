@@ -151,7 +151,9 @@ export default function CoveragePage() {
       .catch(err => console.warn('[CoveragePage] Failed to fetch live chains from DB:', err));
   }, []);
 
-  // Poll live streams from PostgreSQL DB via /v1/streams
+  const [isCounterPulsing, setIsCounterPulsing] = useState<boolean>(false);
+
+  // Poll live streams from Backend /v1/streams
   useEffect(() => {
     let mounted = true;
 
@@ -163,40 +165,24 @@ export default function CoveragePage() {
         .then(data => {
           if (!mounted) return;
           if (data.success && Array.isArray(data.events)) {
-            if (data.total_launches) setTotalLaunches(data.total_launches);
+            if (data.total_launches) {
+              setTotalLaunches(prev => {
+                if (prev !== data.total_launches) {
+                  setIsCounterPulsing(true);
+                  setTimeout(() => setIsCounterPulsing(false), 900);
+                }
+                return data.total_launches;
+              });
+            }
 
-            // Map DB events to terminal logs
-            const dbLogs: LogEntry[] = data.events.slice(0, 15).map((ev: {
-              id: string;
-              block_timestamp: string;
-              chain_key: 'sol' | 'base' | 'bnb' | 'rh' | 'arc';
-              chain_name: string;
-              venue_name: string;
-              token_address: string;
-              initial_liquidity_usd: number;
-            }) => {
-              const d = new Date(ev.block_timestamp);
-              const timeStr = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}:${String(d.getUTCSeconds()).padStart(2, '0')}.${String(d.getUTCMilliseconds()).padStart(3, '0')}`;
-              
-              return {
-                id: `db-${ev.id}`,
-                timestamp: timeStr,
-                chain_key: ev.chain_key,
-                chain_name: ev.chain_name,
-                event_type: 'POOL_DETECTED',
-                venue_name: ev.venue_name,
-                token_address: ev.token_address,
-                liquidity_usd: ev.initial_liquidity_usd,
-                message: `Launches ledger verified (${ev.chain_name} / ${ev.venue_name})`,
-                latency_ms: Math.floor(45 + Math.random() * 65)
-              };
-            });
+            const incomingLogs: LogEntry[] = data.events;
 
             setLogs(prevLogs => {
               const existingIds = new Set(prevLogs.map(l => l.id));
-              const newUnique = dbLogs.filter(l => !existingIds.has(l.id));
+              // incomingLogs is newest first, reverse so chronological order appends cleanly
+              const newUnique = incomingLogs.filter(l => !existingIds.has(l.id)).reverse();
               if (newUnique.length === 0) return prevLogs;
-              return [...prevLogs, ...newUnique].slice(-80); // Keep max 80 lines in buffer
+              return [...prevLogs, ...newUnique].slice(-100); // Keep max 100 lines in buffer
             });
           }
         })
@@ -204,47 +190,11 @@ export default function CoveragePage() {
     };
 
     fetchStreams();
-    const interval = setInterval(fetchStreams, 5000);
+    const interval = setInterval(fetchStreams, 2000);
     return () => {
       mounted = false;
       clearInterval(interval);
     };
-  }, [isPaused]);
-
-  // Background heartbeat ticks to keep terminal alive and interactive
-  useEffect(() => {
-    if (isPaused) return;
-
-    const mockPoolTick = setInterval(() => {
-      const chains: ('sol' | 'base' | 'bnb' | 'rh' | 'arc')[] = ['sol', 'base', 'bnb', 'rh', 'arc'];
-      const pickChain = chains[Math.floor(Math.random() * chains.length)];
-      const now = new Date();
-      const timeStr = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}:${String(now.getUTCSeconds()).padStart(2, '0')}.${String(now.getUTCMilliseconds()).padStart(3, '0')}`;
-      
-      const sampleEvents: { [key: string]: { type: LogEntry['event_type']; venue: string; msg: string; latency: number } } = {
-        sol: { type: 'RPC_SLOT', venue: 'Helius RPC', msg: `Slot #${312891900 + Math.floor(Math.random() * 800)} confirmed · 0 dropped txs`, latency: 42 },
-        base: { type: 'INGEST_DEX', venue: 'Clanker', msg: `Batch block sync #2319${Math.floor(Math.random() * 9000)} · Gas: 0.001 Gwei`, latency: 74 },
-        bnb: { type: 'POOL_DETECTED', venue: 'Four.meme', msg: `Binance Smart Chain bonding curve tick updated`, latency: 98 },
-        rh: { type: 'AMM_SYNC', venue: 'Pair', msg: `Orderbook depth sample verified with confidence floor`, latency: 125 },
-        arc: { type: 'UPSERT_DB', venue: 'ArcSwap', msg: `Liquidity delta re-indexed to PostgreSQL cluster`, latency: 110 }
-      };
-
-      const eventDetail = sampleEvents[pickChain];
-      const newEntry: LogEntry = {
-        id: `tick-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        timestamp: timeStr,
-        chain_key: pickChain,
-        chain_name: pickChain === 'sol' ? 'Solana' : pickChain === 'base' ? 'Base' : pickChain === 'bnb' ? 'BNB Chain' : pickChain === 'rh' ? 'Robinhood' : 'Arc',
-        event_type: eventDetail.type,
-        venue_name: eventDetail.venue,
-        message: eventDetail.msg,
-        latency_ms: eventDetail.latency + Math.floor(Math.random() * 15)
-      };
-
-      setLogs(prev => [...prev, newEntry].slice(-80));
-    }, 2400);
-
-    return () => clearInterval(mockPoolTick);
   }, [isPaused]);
 
   // Filtered log display
@@ -333,7 +283,16 @@ export default function CoveragePage() {
               </svg>
             </div>
             <div>
-              <div className="collector-card-val">{totalLaunches ? totalLaunches.toLocaleString() : '7,500+'}</div>
+              <div 
+                className="collector-card-val"
+                style={{
+                  color: isCounterPulsing ? '#10b981' : undefined,
+                  transform: isCounterPulsing ? 'scale(1.08)' : 'scale(1)',
+                  transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+              >
+                {totalLaunches ? totalLaunches.toLocaleString() : '7,500+'}
+              </div>
               <div className="collector-card-lbl">Total Ingested Launches</div>
             </div>
           </div>
