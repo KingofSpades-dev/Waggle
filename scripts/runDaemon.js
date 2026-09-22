@@ -46,8 +46,8 @@ let cachedVenueMap = null;
 let lastSnapshotTime = 0;
 let dbBackoffUntil = 0;
 
-// Configurable cycle interval: 45 seconds (within user's requested 30-60s range)
-const CYCLE_INTERVAL_MS = 45000;
+// Configurable cycle interval: 60 seconds (1 minute per cycle)
+const CYCLE_INTERVAL_MS = 60000;
 const SNAPSHOT_INTERVAL_MS = 1800000; // 30 minutes between snapshots to conserve DB ops
 
 async function runSingleCycle() {
@@ -291,7 +291,7 @@ async function runSingleCycle() {
     console.log(`- Pools Batched in 1 Query: ${candidateLaunches.length} (Saved: ${newLaunchesCount})`);
     console.log(`- Total DB Queries in this cycle: Only ~1-2 queries (98% reduction vs legacy)`);
     console.log(`- Estimated Daily DB Queries: ~${estDailyDb} queries/day (Extremely lightweight)`);
-    console.log(`- Next ingestion cycle in 45 seconds (30-60s window)...`);
+    console.log(`- Next ingestion cycle in 60 seconds...`);
 
   } catch (err) {
     const msg = err.message || String(err);
@@ -312,7 +312,7 @@ async function startDaemon() {
   console.log(`🚀 Starting Waggle Optimized Ingestion Daemon (Interval: ${CYCLE_INTERVAL_MS / 1000}s, Batch Bulk Inserts Enabled)...`);
   await runSingleCycle();
   
-  // Continuous loop every 45 seconds (30-60s configurable window)
+  // Continuous loop every 60 seconds
   setInterval(async () => {
     await runSingleCycle();
   }, CYCLE_INTERVAL_MS);
