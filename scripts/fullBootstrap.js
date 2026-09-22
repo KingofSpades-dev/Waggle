@@ -184,19 +184,10 @@ async function main() {
       { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
       { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
 
-      // Robinhood Chain (8 venues) - Ecosystem live since July 2026
-      // Bonding-curve
-      { chainKey: 'rh', name: 'hood.fun', key: 'hood_fun', curveType: 'bonding_curve' },
-      { chainKey: 'rh', name: 'Flap', key: 'flap', curveType: 'bonding_curve' },
-      { chainKey: 'rh', name: 'Openfair', key: 'openfair', curveType: 'fair_curve' },
-      // Direct Liquidity (no migration)
+      // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)
       { chainKey: 'rh', name: 'Pons', key: 'pons', curveType: 'direct_liquidity' },
-      { chainKey: 'rh', name: 'RobinPad', key: 'robinpad', curveType: 'direct_liquidity' },
-      // AI-agent
-      { chainKey: 'rh', name: 'Bankr', key: 'bankr', curveType: 'agent_bonding' },
-      { chainKey: 'rh', name: 'NOXA Fun', key: 'noxa_fun', curveType: 'agent_bonding' },
-      // AMM / Orderbook
-      { chainKey: 'rh', name: 'PAIR', key: 'pair', curveType: 'amm' },
+      { chainKey: 'rh', name: 'Pools.trade', key: 'pools_trade', curveType: 'direct_liquidity' },
+      { chainKey: 'rh', name: 'hood.fun', key: 'hood_fun', curveType: 'bonding_curve' },
 
       // Arc (2 venues)
       { chainKey: 'arc', name: 'ArcSwap', key: 'arc_swap', curveType: 'amm' },
@@ -215,6 +206,24 @@ async function main() {
         `, [cId, v.name, v.key, v.curveType]);
       }
     }
+
+    // Re-assign launches pointing to deprecated RH venues into 'pons' or 'hood_fun'
+    await client.query(`
+      UPDATE launches 
+      SET venue_id = (SELECT id FROM venues WHERE key = 'pons' LIMIT 1)
+      WHERE venue_id IN (
+        SELECT id FROM venues 
+        WHERE chain_id = (SELECT id FROM chains WHERE key = 'rh')
+          AND key NOT IN ('pons', 'pools_trade', 'hood_fun')
+      );
+    `);
+
+    // Clean up any old Robinhood venues in DB
+    await client.query(`
+      DELETE FROM venues 
+      WHERE chain_id = (SELECT id FROM chains WHERE key = 'rh')
+        AND key NOT IN ('pons', 'pools_trade', 'hood_fun');
+    `);
 
     const venueRows = await client.query('SELECT id, key FROM venues;');
     const venueMap = Object.fromEntries(venueRows.rows.map(r => [r.key, r.id]));
@@ -349,14 +358,9 @@ async function main() {
         { vKey: 'pancakeswap', weight: 0.30, baseLiq: 9600 }
       ],
       rh: [
-        { vKey: 'hood_fun', weight: 0.20, baseLiq: 6400 },
-        { vKey: 'flap', weight: 0.15, baseLiq: 5800 },
-        { vKey: 'openfair', weight: 0.10, baseLiq: 7200 },
-        { vKey: 'pons', weight: 0.15, baseLiq: 15600 },
-        { vKey: 'robinpad', weight: 0.10, baseLiq: 14200 },
-        { vKey: 'bankr', weight: 0.15, baseLiq: 13900 },
-        { vKey: 'noxa_fun', weight: 0.05, baseLiq: 8900 },
-        { vKey: 'pair', weight: 0.10, baseLiq: 12400 }
+        { vKey: 'hood_fun', weight: 0.40, baseLiq: 6400 },
+        { vKey: 'pons', weight: 0.35, baseLiq: 15600 },
+        { vKey: 'pools_trade', weight: 0.25, baseLiq: 14800 }
       ],
       arc: [
         { vKey: 'arc_swap', weight: 0.55, baseLiq: 8400 },

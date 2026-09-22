@@ -38,7 +38,7 @@ export const CHAINS: ChainData[] = [
     name: "Robinhood",
     key: "rh",
     hue: "#12b981",
-    src: "Pons, Flap, hood.fun, Bankr, RPC",
+    src: "Pons, Pools.trade, hood.fun",
     conf: "med",
     n: 700,
     isCovered: true,
@@ -77,19 +77,10 @@ export const VENUES: VenueData[] = [
   { name: "Gra.fun", chain: "bnb", perday: 920, liq: 4800, extract: 56, surv: 3.3 },
   { name: "PancakeSwap v3", chain: "bnb", perday: 1080, liq: 9600, extract: 44, surv: 4.5 },
 
-  // Robinhood Chain (8 venues) - Ecosystem live since July 2026
-  // Bonding-curve
+  // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)
+  { name: "Pons", chain: "rh", perday: 540, liq: 15600, extract: 28, surv: 6.7 },
+  { name: "Pools.trade", chain: "rh", perday: 420, liq: 14800, extract: 30, surv: 6.3 },
   { name: "hood.fun", chain: "rh", perday: 850, liq: 6400, extract: 48, surv: 4.9 },
-  { name: "Flap", chain: "rh", perday: 620, liq: 5800, extract: 52, surv: 4.2 },
-  { name: "Openfair", chain: "rh", perday: 380, liq: 7200, extract: 41, surv: 5.4 },
-  // Direct Liquidity (no migration)
-  { name: "Pons", chain: "rh", perday: 490, liq: 15600, extract: 28, surv: 6.7 },
-  { name: "RobinPad", chain: "rh", perday: 340, liq: 14200, extract: 31, surv: 6.1 },
-  // AI-agent
-  { name: "Bankr", chain: "rh", perday: 510, liq: 13900, extract: 33, surv: 6.3 },
-  { name: "NOXA Fun", chain: "rh", perday: 290, liq: 8900, extract: 39, surv: 5.1 },
-  // AMM / Orderbook
-  { name: "PAIR", chain: "rh", perday: 310, liq: 12400, extract: 45, surv: 5.8 },
 
   // Arc (2 venues)
   { name: "ArcSwap", chain: "arc", perday: 310, liq: 8400, extract: 42, surv: 3.8 },

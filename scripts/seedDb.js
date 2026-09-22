@@ -33,19 +33,10 @@ const SEED_VENUES = [
   { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
   { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
 
-  // Robinhood Chain (8 venues) - Ecosystem live since July 2026
-  // Bonding-curve
-  { chainKey: 'rh', name: 'hood.fun', key: 'hood_fun', curveType: 'bonding_curve' },
-  { chainKey: 'rh', name: 'Flap', key: 'flap', curveType: 'bonding_curve' },
-  { chainKey: 'rh', name: 'Openfair', key: 'openfair', curveType: 'fair_curve' },
-  // Direct Liquidity (no migration)
+  // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)
   { chainKey: 'rh', name: 'Pons', key: 'pons', curveType: 'direct_liquidity' },
-  { chainKey: 'rh', name: 'RobinPad', key: 'robinpad', curveType: 'direct_liquidity' },
-  // AI-agent
-  { chainKey: 'rh', name: 'Bankr', key: 'bankr', curveType: 'agent_bonding' },
-  { chainKey: 'rh', name: 'NOXA Fun', key: 'noxa_fun', curveType: 'agent_bonding' },
-  // AMM / Orderbook
-  { chainKey: 'rh', name: 'PAIR', key: 'pair', curveType: 'amm' },
+  { chainKey: 'rh', name: 'Pools.trade', key: 'pools_trade', curveType: 'direct_liquidity' },
+  { chainKey: 'rh', name: 'hood.fun', key: 'hood_fun', curveType: 'bonding_curve' },
 
   // Arc (2)
   { chainKey: 'arc', name: 'ArcSwap', key: 'arc_swap', curveType: 'amm' },
@@ -84,6 +75,25 @@ async function main() {
     }
   }
   console.log('[Seed DB] Venues seeded successfully.');
+
+  // Re-assign any launches pointing to deprecated RH venues into 'pons' or 'hood_fun'
+  await client.query(`
+    UPDATE launches 
+    SET venue_id = (SELECT id FROM venues WHERE key = 'pons' LIMIT 1)
+    WHERE venue_id IN (
+      SELECT id FROM venues 
+      WHERE chain_id = (SELECT id FROM chains WHERE key = 'rh')
+        AND key NOT IN ('pons', 'pools_trade', 'hood_fun')
+    );
+  `);
+
+  // Delete deprecated RH venues cleanly
+  await client.query(`
+    DELETE FROM venues 
+    WHERE chain_id = (SELECT id FROM chains WHERE key = 'rh')
+      AND key NOT IN ('pons', 'pools_trade', 'hood_fun');
+  `);
+  console.log('[Seed DB] Cleaned up deprecated RH venues: only Pons, Pools.trade, and hood.fun remain.');
 
   const chainsCount = await client.query('SELECT COUNT(*) FROM chains;');
   const venuesCount = await client.query('SELECT COUNT(*) FROM venues;');
