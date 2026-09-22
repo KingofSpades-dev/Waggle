@@ -1031,6 +1031,13 @@ td.num {
   white-space: nowrap;
 }
 
+.vname {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
 .vname-text {
   font-weight: 700;
   font-size: 14px;
@@ -1978,7 +1985,7 @@ footer {
 
 .terminal-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
   padding: 3px 6px;
   border-radius: 4px;
@@ -1999,7 +2006,9 @@ footer {
 }
 
 .t-chain-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 1px 6px;
   border-radius: 4px;
   font-size: 9.5px;
@@ -2047,6 +2056,9 @@ footer {
 }
 
 .t-venue {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: #e2e8f0;
   font-weight: 700;
   flex-shrink: 0;

@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CHAINS } from '@/lib/mockData';
+import { CHAINS, VENUES } from '@/lib/mockData';
 import HoneycombAmbient from '@/components/HoneycombAmbient';
+import { ChainLogo } from '@/components/ChainLogo';
+import { VenueLogo } from '@/components/VenueLogo';
 
 interface ChainApiItem {
   name: string;
@@ -12,6 +14,35 @@ interface ChainApiItem {
   confidence: string;
   sample_size: number;
   is_covered: boolean;
+}
+
+interface VenueApiItem {
+  name: string;
+  chain: string;
+  curve_type: string;
+  perday: number;
+  liq: number;
+  surv: number;
+  is_covered: boolean;
+}
+
+const CHAIN_NAMES: Record<string, string> = {
+  sol: 'Solana',
+  base: 'Base',
+  bnb: 'BNB Chain',
+  rh: 'Robinhood',
+  arc: 'Arc'
+};
+
+function getVenueMechanism(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('virtuals')) return 'Agent Bonding';
+  if (n.includes('astrovault')) return 'Hybrid Stable Curve';
+  if (n.includes('meteora') || n.includes('slipstream')) return 'Concentrated AMM';
+  if (n.includes('raydium') || n.includes('pancake') || n.includes('arcswap')) return 'Standard AMM';
+  if (n.includes('pons') || n.includes('pools.trade')) return 'Direct Liquidity';
+  if (n.includes('bags')) return 'Social Bonding';
+  return 'Bonding Curve';
 }
 
 interface LogEntry {
@@ -92,7 +123,7 @@ const INITIAL_LOGS: LogEntry[] = [
     chain_key: 'rh',
     chain_name: 'Robinhood',
     event_type: 'INGEST_DEX',
-    venue_name: 'Pair',
+    venue_name: 'Pons',
     token_address: 'rh_90218731982739182739182739182',
     liquidity_usd: 12500.00,
     message: 'Liquidity window state synced to Waggle DB snapshot',
@@ -125,6 +156,18 @@ export default function CoveragePage() {
     }))
   );
 
+  const [venuesList, setVenuesList] = useState<VenueApiItem[]>(
+    VENUES.map(v => ({
+      name: v.name,
+      chain: v.chain,
+      curve_type: getVenueMechanism(v.name),
+      perday: v.perday,
+      liq: v.liq,
+      surv: v.surv,
+      is_covered: true
+    }))
+  );
+
   const [logs, setLogs] = useState<LogEntry[]>(INITIAL_LOGS);
   const [filterChain, setFilterChain] = useState<string>('all');
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -149,6 +192,23 @@ export default function CoveragePage() {
         }
       })
       .catch(err => console.warn('[CoveragePage] Failed to fetch live chains from DB:', err));
+
+    fetch('/v1/venues')
+      .then(res => res.json())
+      .then(json => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          setVenuesList(json.data.map((v: { name: string; chain: string; curve_type?: string; launches_count?: number; avg_initial_liquidity_usd?: number; survival_rate_pct?: number }) => ({
+            name: v.name,
+            chain: v.chain,
+            curve_type: v.curve_type || getVenueMechanism(v.name),
+            perday: v.launches_count || 0,
+            liq: v.avg_initial_liquidity_usd || 0,
+            surv: v.survival_rate_pct || 0,
+            is_covered: true
+          })));
+        }
+      })
+      .catch(err => console.warn('[CoveragePage] Failed to fetch live venues from DB:', err));
   }, []);
 
   const [isCounterPulsing, setIsCounterPulsing] = useState<boolean>(false);
@@ -228,10 +288,10 @@ export default function CoveragePage() {
               {chainsList.map(c => (
                 <tr key={c.key}>
                   <td>
-                    <span className="vname">
-                      <i className="vchip" style={{ background: c.hue }}></i>
-                      {c.name}
-                    </span>
+                    <div className="vname" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                      <ChainLogo chainKey={c.key} size={22} />
+                      <span style={{ fontWeight: 600 }}>{c.name}</span>
+                    </div>
                   </td>
                   <td>
                     {c.is_covered ? (
@@ -246,6 +306,79 @@ export default function CoveragePage() {
                   <td>{c.sample_size ? c.sample_size.toLocaleString() : '0'}</td>
                   <td>
                     <span className={`conf c-${c.confidence}`}>{c.confidence}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 36 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <h2>Indexed Launchpads & Protocols</h2>
+            <p className="lede" style={{ margin: '4px 0 0' }}>
+              Real-time ingestion across 17 bonding curves, concentrated AMMs, and direct liquidity protocols.
+            </p>
+          </div>
+          <span className="conf c-high" style={{ fontSize: 11, padding: '4px 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            17 / 17 Ingested
+          </span>
+        </div>
+
+        <div className="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Launchpad / Venue</th>
+                <th>Host Chain</th>
+                <th>Architecture</th>
+                <th>Status</th>
+                <th>24h Launches</th>
+                <th>Avg Initial Liquidity</th>
+                <th>7d Survival Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              {venuesList.map(v => (
+                <tr key={v.name}>
+                  <td>
+                    <div className="vname" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                      <VenueLogo venueName={v.name} size={22} />
+                      <span style={{ fontWeight: 600 }}>{v.name}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <ChainLogo chainKey={v.chain} size={16} />
+                      <span style={{ fontSize: 13, color: 'var(--dim)' }}>
+                        {CHAIN_NAMES[v.chain] || v.chain.toUpperCase()}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="vcurve-badge" style={{ margin: 0 }}>
+                      {v.curve_type}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="conf c-high">Live Ingestion</span>
+                  </td>
+                  <td>
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      {v.perday ? v.perday.toLocaleString() : '—'}
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      ${(v.liq || 0).toLocaleString()}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="conf c-high">
+                      {(v.surv || 0).toFixed(1)}%
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -361,7 +494,9 @@ export default function CoveragePage() {
                     key={tab.key}
                     onClick={() => setFilterChain(tab.key)}
                     className={`t-filter-btn ${filterChain === tab.key ? 'active' : ''}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   >
+                    {tab.key !== 'all' && <ChainLogo chainKey={tab.key} size={14} />}
                     {tab.label}
                   </button>
                 ))}
@@ -402,10 +537,14 @@ export default function CoveragePage() {
                 <div key={log.id} className="terminal-line">
                   <span className="t-time">{log.timestamp}</span>
                   <span className={`t-chain-tag t-chain-${log.chain_key}`}>
+                    <ChainLogo chainKey={log.chain_key} size={13} />
                     {log.chain_key.toUpperCase()}
                   </span>
                   <span className="t-event-tag">[{log.event_type}]</span>
-                  <span className="t-venue">{log.venue_name}</span>
+                  <span className="t-venue">
+                    <VenueLogo venueName={log.venue_name} size={14} />
+                    {log.venue_name}
+                  </span>
                   <span className="t-content">
                     {log.token_address ? (
                       <>
@@ -443,6 +582,142 @@ export default function CoveragePage() {
             </div>
             <div>
               <span>Status:</span> <strong style={{ color: isPaused ? '#f59e0b' : '#34d399' }}>{isPaused ? 'FEED PAUSED' : 'ALL STREAMS REPORTING (5/5)'}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Metric Scope & Accounting Breakdown Cards - Premium UI */}
+        <div style={{
+          marginTop: 32,
+          padding: '28px',
+          background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+          border: '1px solid rgba(39, 56, 105, 0.12)',
+          borderRadius: 20,
+          boxShadow: '0 12px 36px -8px rgba(39, 56, 105, 0.07)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid rgba(39, 56, 105, 0.08)' }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0284c7', marginBottom: 4 }}>
+                Statistical Engine Methodology
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--navy-900)', margin: 0 }}>
+                Data Accounting & Metric Scope Breakdown
+              </h3>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 9999, background: 'rgba(2, 132, 199, 0.1)', color: '#0284c7', border: '1px solid rgba(2, 132, 199, 0.2)' }}>
+              3 Active Data Windows
+            </span>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
+            {/* Card 1 */}
+            <div style={{
+              background: 'var(--white)',
+              border: '1px solid rgba(39, 56, 105, 0.1)',
+              borderRadius: 14,
+              padding: '20px',
+              transition: 'all 0.25s ease',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(2, 132, 199, 0.1)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                      <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: 'rgba(2, 132, 199, 0.1)', color: '#0284c7', border: '1px solid rgba(2, 132, 199, 0.2)' }}>
+                    ALL-TIME HISTORY
+                  </span>
+                </div>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy-900)', margin: '0 0 6px 0' }}>
+                  Total Ingested Launches
+                </h4>
+                <p style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.55, margin: 0 }}>
+                  Cumulative count of all token & liquidity pool launch rows indexed and written to PostgreSQL since initial daemon deployment.
+                </p>
+              </div>
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #f1f5f9', fontSize: 11, fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0284c7' }}></span>
+                Scope: Global PostgreSQL Database Total
+              </div>
+            </div>
+
+            {/* Card 2 */}
+            <div style={{
+              background: 'var(--white)',
+              border: '1px solid rgba(39, 56, 105, 0.1)',
+              borderRadius: 14,
+              padding: '20px',
+              transition: 'all 0.25s ease',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10"/>
+                      <line x1="12" y1="20" x2="12" y2="4"/>
+                      <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    STATISTICAL WINDOW
+                  </span>
+                </div>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy-900)', margin: '0 0 6px 0' }}>
+                  Sample Size (N)
+                </h4>
+                <p style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.55, margin: 0 }}>
+                  Verified active sample size filtered and processed by Waggle&apos;s statistical engine to calculate confidence floors (<em>High/Mid</em>).
+                </p>
+              </div>
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #f1f5f9', fontSize: 11, fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></span>
+                Scope: Indexed Chains Table Metric
+              </div>
+            </div>
+
+            {/* Card 3 */}
+            <div style={{
+              background: 'var(--white)',
+              border: '1px solid rgba(39, 56, 105, 0.1)',
+              borderRadius: 14,
+              padding: '20px',
+              transition: 'all 0.25s ease',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(245, 158, 11, 0.1)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                    ROLLING 24H WINDOW
+                  </span>
+                </div>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy-900)', margin: '0 0 6px 0' }}>
+                  24h Launches
+                </h4>
+                <p style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.55, margin: 0 }}>
+                  Newly initialized pairs and bonding curves detected strictly within the last 24 hours per individual launchpad & DEX venue.
+                </p>
+              </div>
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #f1f5f9', fontSize: 11, fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#d97706' }}></span>
+                Scope: Launchpads & Protocols Table
+              </div>
             </div>
           </div>
         </div>
