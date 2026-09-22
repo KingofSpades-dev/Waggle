@@ -13,6 +13,7 @@ import { MetricType, AnalyseResponseBody, ChainData } from '@/lib/types';
 import HoneycombAmbient from '@/components/HoneycombAmbient';
 import { ChainLogo } from '@/components/ChainLogo';
 import { VenueLogo } from '@/components/VenueLogo';
+import { ScoutLoadingCard } from '@/components/ScoutLoadingCard';
 
 // Color Ramp Logic matching waggle.html STOPS
 const STOPS = [
@@ -59,7 +60,7 @@ const WEIGHT_DETAILS: Record<string, { label: string; desc: string }> = {
 export default function HomePage() {
   const [description, setDescription] = useState('');
   const [report, setReport] = useState<AnalyseResponseBody | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isScouting, setIsScouting] = useState(false);
 
   // Matrix Heatmap state
   const [metric, setMetric] = useState<MetricType>('survival');
@@ -176,23 +177,24 @@ export default function HomePage() {
   const [lo, hi] = getRange(metric);
 
   // Handle Scout Analysis
-  const handleScout = (overrideText?: string) => {
+  const handleScout = async (overrideText?: string) => {
     const textToScout = overrideText !== undefined ? overrideText : description;
-    if (!textToScout.trim()) return;
+    if (!textToScout.trim() || isScouting) return;
 
-    startTransition(async () => {
-      try {
-        const res = await fetch('/v1/analyse', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ description: textToScout })
-        });
-        const data: AnalyseResponseBody = await res.json();
-        setReport(data);
-      } catch (err) {
-        console.error('Failed to analyze:', err);
-      }
-    });
+    setIsScouting(true);
+    try {
+      const res = await fetch('/v1/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: textToScout })
+      });
+      const data: AnalyseResponseBody = await res.json();
+      setReport(data);
+    } catch (err) {
+      console.error('Failed to analyze:', err);
+    } finally {
+      setIsScouting(false);
+    }
   };
 
   // Sorted venues
@@ -273,13 +275,13 @@ export default function HomePage() {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleScout();
               }}
             />
-            <button className={`go ${isPending ? 'is-loading' : ''}`} onClick={() => handleScout()} disabled={isPending}>
+            <button className={`go ${isScouting ? 'is-loading' : ''}`} onClick={() => handleScout()} disabled={isScouting}>
               <span className="go-hex-icon">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
                 </svg>
               </span>
-              <span>{isPending ? 'Scouting...' : 'Scout it'}</span>
+              <span>{isScouting ? 'Scouting...' : 'Scout it'}</span>
             </button>
           </div>
 
@@ -302,7 +304,9 @@ export default function HomePage() {
             ))}
           </div>
 
-          {report && (
+          {isScouting && <ScoutLoadingCard />}
+
+          {report && !isScouting && (
             <div className="report on">
               <div className="verdict">
                 <span

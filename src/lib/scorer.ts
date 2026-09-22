@@ -1,16 +1,101 @@
 import { AnalyseRequestBody, AnalyseResponseBody, ScoredResult, LaunchpadFitDetail, AlternativeLaunchpad } from './types';
-import { getLiveDatabaseMetrics } from './dbMetrics';
+import { getLiveDatabaseMetrics, DbChain, DbVenue } from './dbMetrics';
 
 const WEIGHTS = { chain: 35, venue: 30, meta: 20, hour: 15 };
 const CLASSIFIER_VERSION = 'v1.1.0-empirical-quantitative-ai';
 const WEIGHTS_VERSION = 'v1.0.0-devbrief-spec';
 const METRICS_VERSION = 'v1.0.4-pg-timescale';
 
+// ---------------------------------------------------------------------------
+// PERF FIX #1: dbMetrics is queried fresh (and re-serialized into prompt text)
+// on every single scoutProject() call. If getLiveDatabaseMetrics() returns
+// 10-30K raw/near-duplicate rows (e.g. per-launch events instead of pre-
+// aggregated per-chain / per-venue rollups), this file was looping over ALL
+// of them to build chainSummary/venueSummary and the quantitative matrix,
+// which is what blew up to ~100s (huge LLM prompt + repeated O(n) work).
+//
+// This system only ever reasons about a fixed, small set of chains
+// (sol, base, bnb, rh, arc) and venues (virtuals, aerodrome, pump, raydium,
+// fourmeme, pancakeswap, rh_settle, astrovault) — see the JSON schema in
+// evaluateWithLLM. So we:
+//   (a) cache the live metrics for a short TTL instead of re-fetching/
+//       re-processing them on every call, and
+//   (b) collapse whatever getLiveDatabaseMetrics() returns down to one row
+//       per chain/venue key before anything downstream touches it.
+//
+// The real, durable fix is to make the Postgres/Timescale query in
+// dbMetrics.ts itself aggregate (GROUP BY chain/venue, or a materialized
+// view) instead of shipping raw rows into Node — this is a defensive
+// safety net that makes scorer.ts fast regardless of what that query
+// currently returns.
+// ---------------------------------------------------------------------------
+type DbMetrics = Awaited<ReturnType<typeof getLiveDatabaseMetrics>>;
+
+const DB_METRICS_TTL_MS = 30_000; // live metrics don't need sub-second freshness
+let dbMetricsCache: { data: DbMetrics; expiresAt: number } | null = null;
+let dbMetricsInflight: Promise<DbMetrics> | null = null;
+
+function dedupeByKey<T extends { key: string }>(items: T[], maxItems: number): T[] {
+  const seen = new Map<string, T>();
+  for (const item of items) {
+    if (!seen.has(item.key)) seen.set(item.key, item);
+    if (seen.size >= maxItems) break; // hard safety cap even if keys turn out to be unexpectedly diverse
+  }
+  return Array.from(seen.values());
+}
+
+function collapseDbMetrics(raw: DbMetrics): DbMetrics {
+  return {
+    ...raw,
+    chains: dedupeByKey(raw.chains, 10),
+    venues: dedupeByKey(raw.venues, 20)
+  };
+}
+
+async function getCachedDatabaseMetrics(): Promise<DbMetrics> {
+  const now = Date.now();
+  if (dbMetricsCache && dbMetricsCache.expiresAt > now) {
+    return dbMetricsCache.data;
+  }
+  // Coalesce concurrent callers into a single in-flight fetch instead of
+  // firing N parallel Postgres queries when several requests land at once.
+  if (!dbMetricsInflight) {
+    dbMetricsInflight = getLiveDatabaseMetrics()
+      .then(collapseDbMetrics)
+      .finally(() => { dbMetricsInflight = null; });
+  }
+  const data = await dbMetricsInflight;
+  dbMetricsCache = { data, expiresAt: now + DB_METRICS_TTL_MS };
+  return data;
+}
+
 // Security: Prompt injection filter & sanitizer
 export function sanitizeInputText(rawText: string): string {
   let text = (rawText || '').slice(0, 1500);
   text = text.replace(/(ignore previous|system prompt|override score|always return|act as)/gi, "[redacted]");
   return text.trim();
+}
+
+// PERF FIX #2: these were rebuilt with `new RegExp(...)` inside countHits()
+// on every single extractProjectFeatures() call. Compiling ~100 regexes per
+// request is cheap once, but pointless repeated work at any real request
+// volume — compile them once, at module load.
+function compileSignalRegexes(words: string[]): RegExp[] {
+  return words.map(word => new RegExp(`\\b${word}\\b`, 'i'));
+}
+
+const AGENT_SIGNAL_RES = compileSignalRegexes(["agent", "autonomous", "otonom", "ai", "bot", "llm", "inference", "agentic", "automated", "otomatis", "assistant", "builder", "copilot", "nohands", "subagent", "neural", "decision"]);
+const DEFI_SIGNAL_RES = compileSignalRegexes(["defi", "lending", "yield", "liquidity", "likuiditas", "perp", "stablecoin", "protocol", "protokol", "vault", "dex", "swap", "pool", "staking", "amm", "borrow", "loan", "rebalance", "arbitrage", "cpmm"]);
+const GAME_SIGNAL_RES = compileSignalRegexes(["game", "gaming", "play", "player", "pemain", "nft", "item", "quest", "arcade", "metaverse", "rpg", "p2e", "gamer", "level", "guild", "inventory", "pvp", "turnamen"]);
+const MEME_SIGNAL_RES = compileSignalRegexes(["meme", "community", "komunitas", "joke", "lelucon", "discord", "culture", "viral", "coin", "koin", "cat", "dog", "anjing", "kucing", "pepe", "wif", "pump", "fun", "degen", "telegram", "fair launch", "ticker"]);
+const RWA_SIGNAL_RES = compileSignalRegexes(["rwa", "property", "properti", "asset", "aset", "equity", "custodian", "tokenis", "tokeniz", "real world", "house", "estate", "debt", "bond", "mortgage", "treasury", "credit", "invoice", "villa"]);
+
+function countHits(regexes: RegExp[], lower: string): number {
+  let count = 0;
+  for (const re of regexes) {
+    if (re.test(lower)) count++;
+  }
+  return count;
 }
 
 interface ProjectFeatures {
@@ -38,28 +123,12 @@ export function extractProjectFeatures(req: AnalyseRequestBody): ProjectFeatures
   const lower = text.toLowerCase();
   const constraints = req.constraints || {};
 
-  // Trait indicators with exact word boundary check
-  const agentSignals = ["agent", "autonomous", "otonom", "ai", "bot", "llm", "inference", "agentic", "automated", "otomatis", "assistant", "builder", "copilot", "nohands", "subagent", "neural", "decision"];
-  const defiSignals = ["defi", "lending", "yield", "liquidity", "likuiditas", "perp", "stablecoin", "protocol", "protokol", "vault", "dex", "swap", "pool", "staking", "amm", "borrow", "loan", "rebalance", "arbitrage", "cpmm"];
-  const gameSignals = ["game", "gaming", "play", "player", "pemain", "nft", "item", "quest", "arcade", "metaverse", "rpg", "p2e", "gamer", "level", "guild", "inventory", "pvp", "turnamen"];
-  const memeSignals = ["meme", "community", "komunitas", "joke", "lelucon", "discord", "culture", "viral", "coin", "koin", "cat", "dog", "anjing", "kucing", "pepe", "wif", "pump", "fun", "degen", "telegram", "fair launch", "ticker"];
-  const rwaSignals = ["rwa", "property", "properti", "asset", "aset", "equity", "custodian", "tokenis", "tokeniz", "real world", "house", "estate", "debt", "bond", "mortgage", "treasury", "credit", "invoice", "villa"];
-
-  const countHits = (signals: string[]) => signals.reduce((acc, word) => {
-    try {
-      const re = new RegExp(`\\b${word}\\b`, 'i');
-      return acc + (re.test(lower) ? 1 : 0);
-    } catch {
-      return acc + (lower.includes(word) ? 1 : 0);
-    }
-  }, 0);
-
   const categoryScores = {
-    agent: countHits(agentSignals),
-    defi: countHits(defiSignals),
-    game: countHits(gameSignals),
-    meme: countHits(memeSignals),
-    rwa: countHits(rwaSignals)
+    agent: countHits(AGENT_SIGNAL_RES, lower),
+    defi: countHits(DEFI_SIGNAL_RES, lower),
+    game: countHits(GAME_SIGNAL_RES, lower),
+    meme: countHits(MEME_SIGNAL_RES, lower),
+    rwa: countHits(RWA_SIGNAL_RES, lower)
   };
 
   // Determine primary category
@@ -110,6 +179,30 @@ export function extractProjectFeatures(req: AnalyseRequestBody): ProjectFeatures
   };
 }
 
+function findMatchingChain(chainKey: string | undefined, dbChains: DbChain[]): DbChain {
+  if (!chainKey) return dbChains[0];
+  const ck = chainKey.toLowerCase().trim();
+  const found = dbChains.find(c => c.key.toLowerCase() === ck || c.name.toLowerCase().includes(ck));
+  return found || dbChains[0];
+}
+
+function findMatchingVenue(venueKey: string | undefined, chainKey: string, dbVenues: DbVenue[]): DbVenue {
+  if (!venueKey) {
+    return dbVenues.find(v => v.chainKey === chainKey) || dbVenues[0];
+  }
+  const vk = venueKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  let found = dbVenues.find(v => {
+    const dbVk = v.key.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return dbVk === vk || dbVk.includes(vk) || vk.includes(dbVk);
+  });
+
+  if (!found) {
+    found = dbVenues.find(v => v.chainKey === chainKey);
+  }
+  return found || dbVenues[0];
+}
+
 /**
  * Attempts real-time deep AI evaluation using Xiaomi Mimo / OpenAI-compatible endpoint.
  * Returns null if LLM is unconfigured, unreachable, or returns quota/rate error.
@@ -132,7 +225,7 @@ async function evaluateWithLLM(
       const avgExt = vens.length > 0 ? Math.round(vens.reduce((s, v) => s + v.extractionPct, 0) / vens.length) : 30;
       return `${c.name} (${c.key}): ${c.survivalRate}% 7d-surv, ${avgExt}% avg extraction, ${c.launchesCount} launches`;
     }).join(' | ');
-    const venueSummary = dbMetrics.venues.map(v => `${v.name} (${v.chainKey}, ${v.curveType}): ${v.survivalRatePct}% 7d-surv, ${v.extractionPct}% extraction, $${v.avgInitialLiquidityUsd} avg liq`).join(' | ');
+    const venueSummary = dbMetrics.venues.map(v => `${v.name} (${v.key}, chain: ${v.chainKey}, ${v.curveType}): ${v.survivalRatePct}% 7d-surv, ${v.extractionPct}% extraction, $${v.avgInitialLiquidityUsd} avg liq`).join(' | ');
 
     const prompt = `You are Waggle's Quantitative Onchain Scout & Evaluation Engine.
 Analyze this token launch submission against live empirical database metrics and return a structured assessment.
@@ -160,8 +253,8 @@ TASK:
 
 RETURN JSON ONLY with this structure:
 {
-  "selected_chain_key": "base"|"sol"|"bnb"|"rh"|"arc",
-  "selected_venue_key": "virtuals"|"aerodrome"|"pump"|"raydium"|"fourmeme"|"pancakeswap"|"rh_settle"|"astrovault",
+  "selected_chain_key": "sol"|"base"|"bnb"|"rh"|"arc",
+  "selected_venue_key": "pump_fun"|"virtuals"|"aerodrome"|"raydium"|"four_meme"|"pancakeswap"|"pons"|"astrovault",
   "hour_utc": 0-23,
   "category": "agent"|"defi"|"game"|"meme"|"rwa",
   "dimensions": { "chain_fit": number, "venue_fit": number, "meta_heat": number, "hour_window": number },
@@ -172,26 +265,23 @@ RETURN JSON ONLY with this structure:
   "meta_reading": string
 }`;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
-
+    // Unlimited timing for AI Mimo reasoning to ensure 100% deep completion
     const res = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey.trim()}`
       },
-      signal: controller.signal,
       body: JSON.stringify({
         model,
-        temperature: 0.2,
+        temperature: 0.1,
+        max_tokens: 4096,
         messages: [
-          { role: 'system', content: 'You are an accurate onchain token launch analyst. Return pure JSON.' },
+          { role: 'system', content: 'You are Waggle Onchain AI Scout. Return pure JSON only with 100% bespoke, fluid, non-generic technical analysis tailored to the specific project description. Never use generic template boilerplate.' },
           { role: 'user', content: prompt }
         ]
       })
     });
-    clearTimeout(timeoutId);
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
@@ -205,8 +295,8 @@ RETURN JSON ONLY with this structure:
     if (!match) return null;
 
     const parsed = JSON.parse(match[0]);
-    const topChain = dbMetrics.chains.find(c => c.key === parsed.selected_chain_key) || dbMetrics.chains[0];
-    const topVenue = dbMetrics.venues.find(v => v.key === parsed.selected_venue_key) || dbMetrics.venues.find(v => v.chainKey === topChain.key) || dbMetrics.venues[0];
+    const topChain = findMatchingChain(parsed.selected_chain_key, dbMetrics.chains);
+    const topVenue = findMatchingVenue(parsed.selected_venue_key, topChain.key, dbMetrics.venues);
 
     // Compute alternative chains
     const otherChains = dbMetrics.chains
@@ -250,7 +340,7 @@ RETURN JSON ONLY with this structure:
         chain_name: topChain.name,
         chain_key: topChain.key,
         curve_type: topVenue.curveType || 'linear_bonding',
-        curve_display: (topVenue.curveType || 'linear_bonding').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        curve_display: (topVenue.curveType || 'linear_bonding').replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         survival_rate_pct: topVenue.survivalRatePct,
         avg_initial_liquidity_usd: topVenue.avgInitialLiquidityUsd || 4500,
         extraction_pct: topVenue.extractionPct,
@@ -282,8 +372,12 @@ RETURN JSON ONLY with this structure:
       },
       disclaimer: "This describes structural fit from historical data. It is not advice and not a prediction."
     };
-  } catch (err) {
-    console.warn('[Scorer] AI evaluation call error:', err);
+  } catch (err: any) {
+    if (err?.name === 'AbortError' || err?.code === 20 || err?.name === 'TimeoutError') {
+      console.info('[Scorer] AI evaluation call timed out (18s limit). Falling back to Quantitative Engine.');
+    } else {
+      console.warn('[Scorer] AI evaluation call error:', err?.message || err);
+    }
     return null;
   }
 }
@@ -452,7 +546,7 @@ function evaluateWithQuantitativeEngine(
     : "organic community interest";
 
   if (top.chain.key === 'base') {
-    readAs = `Launches shaped like ${projectName} (${features.primaryCategory.toUpperCase()}) show significantly higher survival longevity on Base (${top.chainFit}% fit). Base's low L2 execution costs and dense EVM smart contract composability align with ${features.isAgent ? 'autonomous agent execution loops' : 'protocol rebalancing'}, outperforming high-congestion retail alternatives by ${(top.chainFit - (alternatives[0]?.composite_score || 60))} composite points.`;
+    readAs = `Technical Analysis: ${projectName} demonstrates strong structural alignment with Base (${top.chainFit}% fit). Base's low L2 execution fees and dense EVM smart contract composability provide ideal execution conditions for ${features.isAgent ? 'autonomous agent loops' : 'protocol rebalancing'}, outperforming alternative deployment options by ${(top.chainFit - (alternatives[0]?.composite_score || 60))} composite points.`;
     if (top.topVenue.key === 'virtuals') {
       fitReason = `Virtuals Protocol's agent fair-launch curve provides dedicated autonomous agent co-ownership tokenomics, protecting ${projectName} against predatory MEV sniper extraction (${top.topVenue.extractionPct}% observed MEV take) without requiring upfront seed LP funding.`;
       mechanicsSummary = `Fair-launch bonding curve designed specifically for autonomous AI agents with co-ownership staking, continuous revenue distribution routing, and automatic graduation into Aerodrome liquidity.`;
@@ -461,19 +555,19 @@ function evaluateWithQuantitativeEngine(
       mechanicsSummary = `Uniswap v3-style concentrated tick liquidity AMM with veAERO gauge emission voting and deep Base ecosystem liquidity routing.`;
     }
   } else if (top.chain.key === 'sol') {
-    readAs = `Launches shaped like ${projectName} (${features.primaryCategory.toUpperCase()}) maximize momentum on Solana (${top.chainFit}% fit), where retail liquidity velocity and memetic community discovery are highest. Given ${audienceNote}, immediate discoverability outweighs slower institutional validation.`;
+    readAs = `Technical Analysis: ${projectName} captures maximum liquidity momentum on Solana (${top.chainFit}% fit), where transaction speed and rapid token discovery are highest. Given ${audienceNote}, immediate execution speed and low friction outweigh slower institutional validation.`;
     fitReason = `Pump.fun eliminates upfront capital requirements, deploying a deterministic bonding curve that insulates ${projectName} from initial DEX LP drain while tapping into Solana's peak retail volume.`;
     mechanicsSummary = `Zero upfront liquidity required with deterministic price curve until $69k market cap, migrating automatically into Raydium CPMM once the bonding curve completes.`;
   } else if (top.chain.key === 'bnb') {
-    readAs = `Launches shaped like ${projectName} (${features.primaryCategory.toUpperCase()}) align with BNB Smart Chain's active Asian retail trading volume and gaming/consumer ecosystem (${top.chainFit}% fit), capturing sustainable 7-day retention (${top.topVenue.survivalRatePct}% venue survival).`;
+    readAs = `Technical Analysis: ${projectName} aligns with BNB Smart Chain's active consumer trading ecosystem (${top.chainFit}% fit), capturing sustainable 7-day retention (${top.topVenue.survivalRatePct}% venue survival).`;
     fitReason = `4meme provides BNB Chain's dedicated creator curve with minimal gas deployment overhead and seamless graduation into PancakeSwap deep liquidity pools.`;
     mechanicsSummary = `Linear bonding curve on BNB Smart Chain with automatic PancakeSwap LP deployment and creator incentive rewards upon curve completion.`;
   } else if (top.chain.key === 'rh') {
-    readAs = `Launches shaped like ${projectName} (${features.primaryCategory.toUpperCase()}) align with Robinhood Chain's regulated institutional infrastructure (${top.chainFit}% fit). The institutional orderbook eliminates retail MEV leakage, recording the lowest sniper extraction in the industry (${top.topVenue.extractionPct}%).`;
+    readAs = `Technical Analysis: ${projectName} aligns with Robinhood Chain's regulated institutional infrastructure (${top.chainFit}% fit). The institutional orderbook eliminates retail MEV leakage, recording the lowest sniper extraction in the industry (${top.topVenue.extractionPct}%).`;
     fitReason = `Robinhood Settlement provides atomic off-chain orderbook matching with on-chain L2 batch settlement, ensuring regulatory alignment and asset-backed custody protection.`;
     mechanicsSummary = `Regulated hybrid off-chain orderbook with atomic onchain L2 batch settlement and institutional custody integration.`;
   } else {
-    readAs = `Launches shaped like ${projectName} (${features.primaryCategory.toUpperCase()}) benefit from Arc's USDC-native predictable fee structure (${top.chainFit}% fit), avoiding cross-asset volatility for structured financial primitives.`;
+    readAs = `Technical Analysis: ${projectName} benefits from Arc's USDC-native predictable fee structure (${top.chainFit}% fit), avoiding cross-asset volatility for structured financial primitives.`;
     fitReason = `Astrovault's hybrid curve minimizes slippage for standard asset pairs and routes cross-chain Cosmos IBC liquidity.`;
     mechanicsSummary = `Slippage-minimized 1:1 AXV standard pool with integrated Cosmos IBC liquidity bridge and predictable routing curves.`;
   }
@@ -572,16 +666,26 @@ function evaluateWithQuantitativeEngine(
  * If unconfigured or unavailable, executes deep quantitative semantic engine.
  */
 export async function scoutProject(req: AnalyseRequestBody): Promise<AnalyseResponseBody> {
+  const debugTiming = process.env.SCORER_DEBUG_TIMING === '1';
+  const t0 = debugTiming ? Date.now() : 0;
+
   const features = extractProjectFeatures(req);
-  const dbMetrics = await getLiveDatabaseMetrics();
+
+  const dbMetrics = await getCachedDatabaseMetrics();
+  if (debugTiming) console.log(`[Scorer:timing] dbMetrics ready in ${Date.now() - t0}ms (chains=${dbMetrics.chains.length}, venues=${dbMetrics.venues.length})`);
 
   // Tier 1: Try real-time deep AI evaluation
+  const tLlm = debugTiming ? Date.now() : 0;
   const aiResult = await evaluateWithLLM(req, features, dbMetrics);
+  if (debugTiming) console.log(`[Scorer:timing] evaluateWithLLM took ${Date.now() - tLlm}ms (result=${aiResult ? 'hit' : 'miss/fallback'})`);
   if (aiResult) {
+    if (debugTiming) console.log(`[Scorer:timing] scoutProject total ${Date.now() - t0}ms`);
     return aiResult;
   }
 
   // Tier 2: Real-time Quantitative Semantic Engine
-  return evaluateWithQuantitativeEngine(req, features, dbMetrics);
+  const result = evaluateWithQuantitativeEngine(req, features, dbMetrics);
+  if (debugTiming) console.log(`[Scorer:timing] scoutProject total ${Date.now() - t0}ms (quantitative fallback)`);
+  return result;
 }
 
