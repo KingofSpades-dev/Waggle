@@ -59,14 +59,31 @@ export const CHAINS: ChainData[] = [
 ];
 
 export const VENUES: VenueData[] = [
+  // Solana (5 venues)
   { name: "Pump.fun", chain: "sol", perday: 10400, liq: 4100, extract: 71, surv: 1.9 },
   { name: "Bonk.fun", chain: "sol", perday: 2200, liq: 5600, extract: 64, surv: 2.6 },
   { name: "Bags", chain: "sol", perday: 640, liq: 7300, extract: 58, surv: 3.4 },
+  { name: "Raydium CPMM", chain: "sol", perday: 3100, liq: 8500, extract: 42, surv: 4.8 },
+  { name: "Meteora DLMM", chain: "sol", perday: 1450, liq: 11200, extract: 34, surv: 5.6 },
+
+  // Base (4 venues)
   { name: "Clanker", chain: "base", perday: 880, liq: 9100, extract: 47, surv: 5.1 },
-  { name: "Zora", chain: "base", perday: 410, liq: 6800, extract: 39, surv: 4.2 },
+  { name: "Virtuals Protocol", chain: "base", perday: 1940, liq: 12800, extract: 36, surv: 5.9 },
+  { name: "Zora Protocol", chain: "base", perday: 410, liq: 6800, extract: 39, surv: 4.2 },
+  { name: "Aerodrome SlipStream", chain: "base", perday: 2270, liq: 14500, extract: 31, surv: 6.4 },
+
+  // BNB Chain (3 venues)
   { name: "Four.meme", chain: "bnb", perday: 1600, liq: 3900, extract: 69, surv: 2.4 },
+  { name: "Gra.fun", chain: "bnb", perday: 920, liq: 4800, extract: 56, surv: 3.3 },
+  { name: "PancakeSwap v3", chain: "bnb", perday: 1080, liq: 9600, extract: 44, surv: 4.5 },
+
+  // Robinhood (2 venues)
   { name: "PAIR", chain: "rh", perday: 310, liq: 12400, extract: 62, surv: 3.1 },
-  { name: "ArcSwap", chain: "arc", perday: 310, liq: 8400, extract: 42, surv: 3.8 }
+  { name: "Robinhood Settlement", chain: "rh", perday: 450, liq: 18500, extract: 24, surv: 6.8 },
+
+  // Arc (2 venues)
+  { name: "ArcSwap", chain: "arc", perday: 310, liq: 8400, extract: 42, surv: 3.8 },
+  { name: "Astrovault 1:1 AXV", chain: "arc", perday: 260, liq: 6900, extract: 35, surv: 4.7 }
 ];
 
 export const METRICS: Record<MetricType, MetricDefinition> = {

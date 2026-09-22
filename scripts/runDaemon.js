@@ -175,16 +175,24 @@ async function runSingleCycle() {
       if (chainKey === 'sol') {
         if (dexId.includes('bonk') || poolName.includes('bonk')) venueKey = 'bonk_fun';
         else if (dexId.includes('bag') || poolName.includes('bags')) venueKey = 'bags';
+        else if (dexId.includes('meteora') || poolName.includes('dlmm')) venueKey = 'meteora';
+        else if (dexId.includes('raydium') || poolName.includes('cpmm') || dexId.includes('amm')) venueKey = 'raydium';
         else venueKey = 'pump_fun';
       } else if (chainKey === 'base') {
         if (dexId.includes('zora') || poolName.includes('zora')) venueKey = 'zora';
+        else if (dexId.includes('virtual') || poolName.includes('agent')) venueKey = 'virtuals';
+        else if (dexId.includes('aero') || dexId.includes('slipstream')) venueKey = 'aerodrome';
         else venueKey = 'clanker';
       } else if (chainKey === 'bnb') {
-        venueKey = 'four_meme';
+        if (dexId.includes('gra') || poolName.includes('floki')) venueKey = 'grafun';
+        else if (dexId.includes('pancake') || dexId.includes('cake')) venueKey = 'pancakeswap';
+        else venueKey = 'four_meme';
       } else if (chainKey === 'rh') {
-        venueKey = 'pair';
+        if (dexId.includes('settle') || poolName.includes('book')) venueKey = 'rh_settle';
+        else venueKey = 'pair';
       } else if (chainKey === 'arc') {
-        venueKey = 'arc_swap';
+        if (dexId.includes('astro') || poolName.includes('axv')) venueKey = 'astrovault';
+        else venueKey = 'arc_swap';
       }
 
       const venueId = cachedVenueMap[venueKey] || Object.values(cachedVenueMap)[0];

@@ -93,14 +93,31 @@ function getFallbackDatabaseMetrics(): MatrixResponse {
   ];
 
   const venues: DbVenue[] = [
-    { id: 'ven-pump', name: 'pump.fun', key: 'pump', chainKey: 'sol', curveType: 'linear_bonding', launchesCount: 5120, survivalRatePct: 48.2, avgInitialLiquidityUsd: 4200, extractionPct: 34.5 },
+    // Solana (5 venues)
+    { id: 'ven-pump', name: 'Pump.fun', key: 'pump_fun', chainKey: 'sol', curveType: 'linear_bonding', launchesCount: 5120, survivalRatePct: 48.2, avgInitialLiquidityUsd: 4200, extractionPct: 34.5 },
+    { id: 'ven-bonk', name: 'Bonk.fun', key: 'bonk_fun', chainKey: 'sol', curveType: 'linear_bonding', launchesCount: 2200, survivalRatePct: 52.4, avgInitialLiquidityUsd: 5600, extractionPct: 31.8 },
+    { id: 'ven-bags', name: 'Bags', key: 'bags', chainKey: 'sol', curveType: 'social_bonding', launchesCount: 640, survivalRatePct: 54.1, avgInitialLiquidityUsd: 7300, extractionPct: 29.5 },
     { id: 'ven-raydium', name: 'Raydium CPMM', key: 'raydium', chainKey: 'sol', curveType: 'cpmm_amm', launchesCount: 3300, survivalRatePct: 58.1, avgInitialLiquidityUsd: 8500, extractionPct: 28.2 },
-    { id: 'ven-virtuals', name: 'Virtuals Protocol', key: 'virtuals', chainKey: 'base', curveType: 'agent_bonding', launchesCount: 1940, survivalRatePct: 56.4, avgInitialLiquidityUsd: 6800, extractionPct: 31.0 },
-    { id: 'ven-aerodrome', name: 'Aerodrome SlipStream', key: 'aerodrome', chainKey: 'base', curveType: 'concentrated_amm', launchesCount: 2270, survivalRatePct: 44.8, avgInitialLiquidityUsd: 9200, extractionPct: 39.4 },
-    { id: 'ven-fourmeme', name: 'Four.meme', key: 'fourmeme', chainKey: 'bnb', curveType: 'linear_bonding', launchesCount: 2100, survivalRatePct: 36.2, avgInitialLiquidityUsd: 3100, extractionPct: 42.1 },
-    { id: 'ven-pancake', name: 'PancakeSwap v3', key: 'pancakeswap', chainKey: 'bnb', curveType: 'cpmm_amm', launchesCount: 1080, survivalRatePct: 44.5, avgInitialLiquidityUsd: 7400, extractionPct: 35.8 },
-    { id: 'ven-rh-settle', name: 'Robinhood Settlement', key: 'rh_settle', chainKey: 'rh', curveType: 'institutional_book', launchesCount: 1240, survivalRatePct: 62.0, avgInitialLiquidityUsd: 18500, extractionPct: 18.5 },
-    { id: 'ven-astrovault', name: 'Astrovault 1:1 AXV', key: 'astrovault', chainKey: 'arc', curveType: 'hybrid_stable_curve', launchesCount: 890, survivalRatePct: 44.0, avgInitialLiquidityUsd: 5200, extractionPct: 29.0 }
+    { id: 'ven-meteora', name: 'Meteora DLMM', key: 'meteora', chainKey: 'sol', curveType: 'concentrated_amm', launchesCount: 1450, survivalRatePct: 61.3, avgInitialLiquidityUsd: 11200, extractionPct: 24.1 },
+
+    // Base (4 venues)
+    { id: 'ven-clanker', name: 'Clanker', key: 'clanker', chainKey: 'base', curveType: 'bonding_curve', launchesCount: 880, survivalRatePct: 55.2, avgInitialLiquidityUsd: 9100, extractionPct: 32.4 },
+    { id: 'ven-virtuals', name: 'Virtuals Protocol', key: 'virtuals', chainKey: 'base', curveType: 'agent_bonding', launchesCount: 1940, survivalRatePct: 56.4, avgInitialLiquidityUsd: 12800, extractionPct: 31.0 },
+    { id: 'ven-zora', name: 'Zora Protocol', key: 'zora', chainKey: 'base', curveType: 'bonding_curve', launchesCount: 410, survivalRatePct: 51.6, avgInitialLiquidityUsd: 6800, extractionPct: 33.2 },
+    { id: 'ven-aerodrome', name: 'Aerodrome SlipStream', key: 'aerodrome', chainKey: 'base', curveType: 'concentrated_amm', launchesCount: 2270, survivalRatePct: 64.8, avgInitialLiquidityUsd: 14500, extractionPct: 22.4 },
+
+    // BNB Chain (3 venues)
+    { id: 'ven-fourmeme', name: 'Four.meme', key: 'four_meme', chainKey: 'bnb', curveType: 'linear_bonding', launchesCount: 2100, survivalRatePct: 41.2, avgInitialLiquidityUsd: 3900, extractionPct: 42.1 },
+    { id: 'ven-grafun', name: 'Gra.fun', key: 'grafun', chainKey: 'bnb', curveType: 'fair_curve', launchesCount: 920, survivalRatePct: 46.5, avgInitialLiquidityUsd: 4800, extractionPct: 36.8 },
+    { id: 'ven-pancake', name: 'PancakeSwap v3', key: 'pancakeswap', chainKey: 'bnb', curveType: 'cpmm_amm', launchesCount: 1080, survivalRatePct: 52.5, avgInitialLiquidityUsd: 9600, extractionPct: 31.8 },
+
+    // Robinhood (2 venues)
+    { id: 'ven-pair', name: 'PAIR', key: 'pair', chainKey: 'rh', curveType: 'amm', launchesCount: 310, survivalRatePct: 58.0, avgInitialLiquidityUsd: 12400, extractionPct: 29.5 },
+    { id: 'ven-rh-settle', name: 'Robinhood Settlement', key: 'rh_settle', chainKey: 'rh', curveType: 'institutional_book', launchesCount: 1240, survivalRatePct: 68.0, avgInitialLiquidityUsd: 18500, extractionPct: 18.5 },
+
+    // Arc (2 venues)
+    { id: 'ven-arc-swap', name: 'ArcSwap', key: 'arc_swap', chainKey: 'arc', curveType: 'amm', launchesCount: 310, survivalRatePct: 51.0, avgInitialLiquidityUsd: 8400, extractionPct: 33.0 },
+    { id: 'ven-astrovault', name: 'Astrovault 1:1 AXV', key: 'astrovault', chainKey: 'arc', curveType: 'hybrid_stable_curve', launchesCount: 890, survivalRatePct: 54.0, avgInitialLiquidityUsd: 6900, extractionPct: 29.0 }
   ];
 
   const matrixData: Record<string, Record<string, (number | null)[]>> = {};

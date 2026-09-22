@@ -166,14 +166,31 @@ async function main() {
     const chainMap = Object.fromEntries(chainRows.rows.map(r => [r.key, r.id]));
 
     const SEED_VENUES = [
+      // Solana (5 venues)
       { chainKey: 'sol', name: 'Pump.fun', key: 'pump_fun', curveType: 'bonding_curve' },
       { chainKey: 'sol', name: 'Bonk.fun', key: 'bonk_fun', curveType: 'bonding_curve' },
-      { chainKey: 'sol', name: 'Bags', key: 'bags', curveType: 'amm' },
+      { chainKey: 'sol', name: 'Bags', key: 'bags', curveType: 'social_bonding' },
+      { chainKey: 'sol', name: 'Raydium CPMM', key: 'raydium', curveType: 'amm' },
+      { chainKey: 'sol', name: 'Meteora DLMM', key: 'meteora', curveType: 'concentrated_amm' },
+
+      // Base (4 venues)
       { chainKey: 'base', name: 'Clanker', key: 'clanker', curveType: 'bonding_curve' },
-      { chainKey: 'base', name: 'Zora', key: 'zora', curveType: 'bonding_curve' },
+      { chainKey: 'base', name: 'Virtuals Protocol', key: 'virtuals', curveType: 'agent_bonding' },
+      { chainKey: 'base', name: 'Zora Protocol', key: 'zora', curveType: 'bonding_curve' },
+      { chainKey: 'base', name: 'Aerodrome SlipStream', key: 'aerodrome', curveType: 'concentrated_amm' },
+
+      // BNB Chain (3 venues)
       { chainKey: 'bnb', name: 'Four.meme', key: 'four_meme', curveType: 'bonding_curve' },
+      { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
+      { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
+
+      // Robinhood (2 venues)
       { chainKey: 'rh', name: 'PAIR', key: 'pair', curveType: 'amm' },
-      { chainKey: 'arc', name: 'ArcSwap', key: 'arc_swap', curveType: 'amm' }
+      { chainKey: 'rh', name: 'Robinhood Settlement', key: 'rh_settle', curveType: 'institutional_book' },
+
+      // Arc (2 venues)
+      { chainKey: 'arc', name: 'ArcSwap', key: 'arc_swap', curveType: 'amm' },
+      { chainKey: 'arc', name: 'Astrovault 1:1 AXV', key: 'astrovault', curveType: 'hybrid_stable_curve' }
     ];
 
     for (const v of SEED_VENUES) {
@@ -207,6 +224,8 @@ async function main() {
       let vKey = 'pump_fun';
       if (name.includes('bonk')) vKey = 'bonk_fun';
       else if (name.includes('bag')) vKey = 'bags';
+      else if (name.includes('raydium') || name.includes('cpmm')) vKey = 'raydium';
+      else if (name.includes('meteora') || name.includes('dlmm')) vKey = 'meteora';
       const cAt = attr.pool_created_at ? new Date(attr.pool_created_at) : new Date();
       if (attr.address) {
         candidateLaunches.push({
@@ -230,7 +249,10 @@ async function main() {
     for (const p of basePools) {
       const attr = p.attributes || {};
       const name = (attr.name || '').toLowerCase();
-      let vKey = name.includes('zora') ? 'zora' : 'clanker';
+      let vKey = 'clanker';
+      if (name.includes('zora')) vKey = 'zora';
+      else if (name.includes('virtual') || name.includes('agent')) vKey = 'virtuals';
+      else if (name.includes('aero') || name.includes('slip')) vKey = 'aerodrome';
       const cAt = attr.pool_created_at ? new Date(attr.pool_created_at) : new Date();
       if (attr.address) {
         candidateLaunches.push({
@@ -253,11 +275,15 @@ async function main() {
     const bnbPools = bnbData?.data || [];
     for (const p of bnbPools) {
       const attr = p.attributes || {};
+      const name = (attr.name || '').toLowerCase();
+      let vKey = 'four_meme';
+      if (name.includes('gra') || name.includes('floki')) vKey = 'grafun';
+      else if (name.includes('pancake') || name.includes('cake')) vKey = 'pancakeswap';
       const cAt = attr.pool_created_at ? new Date(attr.pool_created_at) : new Date();
       if (attr.address) {
         candidateLaunches.push({
           chainId: chainMap['bnb'],
-          venueId: venueMap['four_meme'],
+          venueId: venueMap[vKey] || venueMap['four_meme'],
           tokenAddress: attr.address,
           poolAddress: attr.address,
           blockNumber: BigInt(Date.now()),
@@ -276,9 +302,10 @@ async function main() {
     for (const p of arcPairs) {
       if (p.pairAddress) {
         const cAt = p.pairCreatedAt ? new Date(p.pairCreatedAt) : new Date();
+        const vKey = p.baseToken?.name?.toLowerCase().includes('astro') ? 'astrovault' : 'arc_swap';
         candidateLaunches.push({
           chainId: chainMap['arc'],
-          venueId: venueMap['arc_swap'],
+          venueId: venueMap[vKey] || venueMap['arc_swap'],
           tokenAddress: p.pairAddress,
           poolAddress: p.pairAddress,
           blockNumber: BigInt(Date.now()),
@@ -289,31 +316,64 @@ async function main() {
       }
     }
 
-    // 3.5 Top-Up Sufficient Historical Distribution (350 launches per chain to ensure high confidence N)
-    console.log('- Generating realistic sample distributions across all chains (350+ per chain)...');
+    // 3.5 Top-Up Sufficient Historical Distribution (350 launches per chain distributed across ALL 16 venues)
+    console.log('- Generating realistic sample distributions across all 16 venues (350+ per chain)...');
     const TARGET_PER_CHAIN = 350;
-    const chainsList = [
-      { key: 'sol', vKey: 'pump_fun', baseLiq: 5000 },
-      { key: 'base', vKey: 'clanker', baseLiq: 8500 },
-      { key: 'bnb', vKey: 'four_meme', baseLiq: 3800 },
-      { key: 'rh', vKey: 'pair', baseLiq: 14000 },
-      { key: 'arc', vKey: 'arc_swap', baseLiq: 6000 }
-    ];
+    const chainVenuesMap = {
+      sol: [
+        { vKey: 'pump_fun', weight: 0.35, baseLiq: 4200 },
+        { vKey: 'bonk_fun', weight: 0.20, baseLiq: 5600 },
+        { vKey: 'bags', weight: 0.15, baseLiq: 7300 },
+        { vKey: 'raydium', weight: 0.20, baseLiq: 8500 },
+        { vKey: 'meteora', weight: 0.10, baseLiq: 11200 }
+      ],
+      base: [
+        { vKey: 'clanker', weight: 0.30, baseLiq: 9100 },
+        { vKey: 'virtuals', weight: 0.30, baseLiq: 12800 },
+        { vKey: 'zora', weight: 0.15, baseLiq: 6800 },
+        { vKey: 'aerodrome', weight: 0.25, baseLiq: 14500 }
+      ],
+      bnb: [
+        { vKey: 'four_meme', weight: 0.45, baseLiq: 3900 },
+        { vKey: 'grafun', weight: 0.25, baseLiq: 4800 },
+        { vKey: 'pancakeswap', weight: 0.30, baseLiq: 9600 }
+      ],
+      rh: [
+        { vKey: 'pair', weight: 0.50, baseLiq: 12400 },
+        { vKey: 'rh_settle', weight: 0.50, baseLiq: 18500 }
+      ],
+      arc: [
+        { vKey: 'arc_swap', weight: 0.55, baseLiq: 8400 },
+        { vKey: 'astrovault', weight: 0.45, baseLiq: 6900 }
+      ]
+    };
 
-    for (const c of chainsList) {
-      const cId = chainMap[c.key];
-      const vId = venueMap[c.vKey];
+    for (const [cKey, vConfigs] of Object.entries(chainVenuesMap)) {
+      const cId = chainMap[cKey];
       const existingInBatch = candidateLaunches.filter(l => l.chainId === cId).length;
       const needed = Math.max(0, TARGET_PER_CHAIN - existingInBatch);
 
       for (let i = 0; i < needed; i++) {
-        const hexAddr = `0x${c.key}_boot_${(i + 1).toString(16).padStart(32, '0')}`;
+        // Pick venue proportionally
+        const rand = Math.random();
+        let cum = 0;
+        let selectedV = vConfigs[0];
+        for (const vc of vConfigs) {
+          cum += vc.weight;
+          if (rand <= cum) {
+            selectedV = vc;
+            break;
+          }
+        }
+
+        const vId = venueMap[selectedV.vKey] || venueMap[vConfigs[0].vKey];
+        const hexAddr = `0x${cKey}_${selectedV.vKey}_${(i + 1).toString(16).padStart(28, '0')}`;
         const daysAgo = (Math.random() * 21) + 0.1;
         const cAt = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
         const randHour = Math.floor(Math.random() * 24);
         cAt.setUTCHours(randHour);
 
-        const liqUsd = parseFloat((c.baseLiq * (0.6 + Math.random() * 0.9)).toFixed(2));
+        const liqUsd = parseFloat((selectedV.baseLiq * (0.7 + Math.random() * 0.7)).toFixed(2));
         candidateLaunches.push({
           chainId: cId,
           venueId: vId,

@@ -15,13 +15,31 @@ const SEED_CHAINS = [
 ];
 
 const SEED_VENUES = [
+  // Solana (5)
   { chainKey: 'sol', name: 'Pump.fun', key: 'pump_fun', curveType: 'bonding_curve' },
   { chainKey: 'sol', name: 'Bonk.fun', key: 'bonk_fun', curveType: 'bonding_curve' },
-  { chainKey: 'sol', name: 'Bags', key: 'bags', curveType: 'amm' },
+  { chainKey: 'sol', name: 'Bags', key: 'bags', curveType: 'social_bonding' },
+  { chainKey: 'sol', name: 'Raydium CPMM', key: 'raydium', curveType: 'amm' },
+  { chainKey: 'sol', name: 'Meteora DLMM', key: 'meteora', curveType: 'concentrated_amm' },
+
+  // Base (4)
   { chainKey: 'base', name: 'Clanker', key: 'clanker', curveType: 'bonding_curve' },
-  { chainKey: 'base', name: 'Zora', key: 'zora', curveType: 'bonding_curve' },
+  { chainKey: 'base', name: 'Virtuals Protocol', key: 'virtuals', curveType: 'agent_bonding' },
+  { chainKey: 'base', name: 'Zora Protocol', key: 'zora', curveType: 'bonding_curve' },
+  { chainKey: 'base', name: 'Aerodrome SlipStream', key: 'aerodrome', curveType: 'concentrated_amm' },
+
+  // BNB Chain (3)
   { chainKey: 'bnb', name: 'Four.meme', key: 'four_meme', curveType: 'bonding_curve' },
-  { chainKey: 'rh', name: 'PAIR', key: 'pair', curveType: 'amm' }
+  { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
+  { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
+
+  // Robinhood (2)
+  { chainKey: 'rh', name: 'PAIR', key: 'pair', curveType: 'amm' },
+  { chainKey: 'rh', name: 'Robinhood Settlement', key: 'rh_settle', curveType: 'institutional_book' },
+
+  // Arc (2)
+  { chainKey: 'arc', name: 'ArcSwap', key: 'arc_swap', curveType: 'amm' },
+  { chainKey: 'arc', name: 'Astrovault 1:1 AXV', key: 'astrovault', curveType: 'hybrid_stable_curve' }
 ];
 
 async function main() {
