@@ -1,6 +1,8 @@
 import React from 'react';
 import { scoutProject } from '@/lib/scorer';
 import { CHAINS } from '@/lib/mockData';
+import { ChainLogo } from '@/components/ChainLogo';
+import { VenueLogo } from '@/components/VenueLogo';
 
 export default async function ReportPermalinkPage({
   params,
@@ -95,10 +97,8 @@ export default async function ReportPermalinkPage({
             <div className="lp-section">
               <div className="lp-header">
                 <div className="lp-title-block">
-                  <div className="lp-icon-hex">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                      <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
-                    </svg>
+                  <div className="lp-icon-box" style={{ background: 'transparent', padding: 0 }}>
+                    <VenueLogo venueName={report.recommended_launchpad.name} size={42} />
                   </div>
                   <div>
                     <span className="lp-eyebrow">RECOMMENDED LAUNCHPAD & VENUE</span>
@@ -107,7 +107,10 @@ export default async function ReportPermalinkPage({
                 </div>
                 <div className="lp-badges">
                   <span className="lp-tag-curve">{report.recommended_launchpad.curve_display}</span>
-                  <span className="lp-tag-chain">{report.recommended_launchpad.chain_name} Ecosystem</span>
+                  <span className="lp-tag-chain" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <ChainLogo chainName={report.recommended_launchpad.chain_name} size={14} />
+                    <span>{report.recommended_launchpad.chain_name} Ecosystem</span>
+                  </span>
                   <span className="lp-tag-match">Top Structural Match</span>
                 </div>
               </div>

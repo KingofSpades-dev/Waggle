@@ -11,6 +11,8 @@ import {
 } from '@/lib/mockData';
 import { MetricType, AnalyseResponseBody, ChainData } from '@/lib/types';
 import HoneycombAmbient from '@/components/HoneycombAmbient';
+import { ChainLogo } from '@/components/ChainLogo';
+import { VenueLogo } from '@/components/VenueLogo';
 
 // Color Ramp Logic matching waggle.html STOPS
 const STOPS = [
@@ -539,7 +541,7 @@ export default function HomePage() {
             {CHAINS.map(c => (
               <div className="mrow" key={c.key}>
                 <div className="rlab">
-                  <i className="ychip" style={{ background: c.hue }}></i>
+                  <ChainLogo chainKey={c.key} chainName={c.name} size={18} />
                   <span>{c.name}</span>
                 </div>
                 {Array.from({ length: 24 }, (_, h) => {
@@ -742,7 +744,7 @@ export default function HomePage() {
                     <td>
                       <div className="vname-group">
                         <div className="vname-header">
-                          <i className="vchip" style={{ background: chainData?.hue || 'var(--navy-900)' }}></i>
+                          <VenueLogo venueName={v.name} venueKey={v.name} chainKey={v.chain} size={22} />
                           <span className="vname-text">{v.name}</span>
                           {isTop1 && <span className="top-badge">Top Survival</span>}
                         </div>
@@ -760,7 +762,7 @@ export default function HomePage() {
                             background: `${chainData.hue}0D`
                           }}
                         >
-                          <i className="vchip" style={{ background: chainData.hue }}></i>
+                          <ChainLogo chainKey={chainData.key} chainName={chainData.name} size={15} />
                           <span>{chainData.name}</span>
                         </span>
                       ) : (
