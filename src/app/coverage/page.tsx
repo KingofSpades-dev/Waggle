@@ -5,6 +5,7 @@ import { CHAINS, VENUES } from '@/lib/mockData';
 import HoneycombAmbient from '@/components/HoneycombAmbient';
 import { ChainLogo } from '@/components/ChainLogo';
 import { VenueLogo } from '@/components/VenueLogo';
+import { TokenSurvivalChartCard } from '@/components/TokenSurvivalChartCard';
 
 interface ChainApiItem {
   name: string;
@@ -270,6 +271,9 @@ export default function CoveragePage() {
           A visible gap is credible. A guess presented as coverage is not. Below is the exact list of indexed chains, their data sources, sample sizes, and unindexed gaps.
         </p>
       </section>
+
+      {/* Token Ingestion & Survival Trajectory Analytics Card */}
+      <TokenSurvivalChartCard />
 
       <section>
         <h2>Indexed Chains & Collectors</h2>
