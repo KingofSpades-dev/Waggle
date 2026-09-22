@@ -184,9 +184,19 @@ async function main() {
       { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
       { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
 
-      // Robinhood (2 venues)
+      // Robinhood Chain (8 venues) - Ecosystem live since July 2026
+      // Bonding-curve
+      { chainKey: 'rh', name: 'hood.fun', key: 'hood_fun', curveType: 'bonding_curve' },
+      { chainKey: 'rh', name: 'Flap', key: 'flap', curveType: 'bonding_curve' },
+      { chainKey: 'rh', name: 'Openfair', key: 'openfair', curveType: 'fair_curve' },
+      // Direct Liquidity (no migration)
+      { chainKey: 'rh', name: 'Pons', key: 'pons', curveType: 'direct_liquidity' },
+      { chainKey: 'rh', name: 'RobinPad', key: 'robinpad', curveType: 'direct_liquidity' },
+      // AI-agent
+      { chainKey: 'rh', name: 'Bankr', key: 'bankr', curveType: 'agent_bonding' },
+      { chainKey: 'rh', name: 'NOXA Fun', key: 'noxa_fun', curveType: 'agent_bonding' },
+      // AMM / Orderbook
       { chainKey: 'rh', name: 'PAIR', key: 'pair', curveType: 'amm' },
-      { chainKey: 'rh', name: 'Robinhood Settlement', key: 'rh_settle', curveType: 'institutional_book' },
 
       // Arc (2 venues)
       { chainKey: 'arc', name: 'ArcSwap', key: 'arc_swap', curveType: 'amm' },
@@ -339,8 +349,14 @@ async function main() {
         { vKey: 'pancakeswap', weight: 0.30, baseLiq: 9600 }
       ],
       rh: [
-        { vKey: 'pair', weight: 0.50, baseLiq: 12400 },
-        { vKey: 'rh_settle', weight: 0.50, baseLiq: 18500 }
+        { vKey: 'hood_fun', weight: 0.20, baseLiq: 6400 },
+        { vKey: 'flap', weight: 0.15, baseLiq: 5800 },
+        { vKey: 'openfair', weight: 0.10, baseLiq: 7200 },
+        { vKey: 'pons', weight: 0.15, baseLiq: 15600 },
+        { vKey: 'robinpad', weight: 0.10, baseLiq: 14200 },
+        { vKey: 'bankr', weight: 0.15, baseLiq: 13900 },
+        { vKey: 'noxa_fun', weight: 0.05, baseLiq: 8900 },
+        { vKey: 'pair', weight: 0.10, baseLiq: 12400 }
       ],
       arc: [
         { vKey: 'arc_swap', weight: 0.55, baseLiq: 8400 },

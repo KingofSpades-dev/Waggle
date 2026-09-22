@@ -38,12 +38,12 @@ export const CHAINS: ChainData[] = [
     name: "Robinhood",
     key: "rh",
     hue: "#12b981",
-    src: "self indexed from RPC",
-    conf: "low",
-    n: 340,
+    src: "Pons, Flap, hood.fun, Bankr, RPC",
+    conf: "med",
+    n: 700,
     isCovered: true,
-    cats: { agent: 34, defi: 42, game: 26, meme: 69, rwa: 81 },
-    meta: { agent: 21, defi: 30, game: 18, meme: 74, rwa: 46 }
+    cats: { agent: 58, defi: 48, game: 32, meme: 72, rwa: 85 },
+    meta: { agent: 64, defi: 45, game: 28, meme: 78, rwa: 52 }
   },
   {
     name: "Arc",
@@ -51,7 +51,7 @@ export const CHAINS: ChainData[] = [
     hue: "#e07b28",
     src: "DexScreener, GeckoTerminal",
     conf: "med",
-    n: 310,
+    n: 670,
     isCovered: true,
     cats: { agent: 55, defi: 68, game: 42, meme: 78, rwa: 35 },
     meta: { agent: 62, defi: 54, game: 40, meme: 80, rwa: 28 }
@@ -77,9 +77,19 @@ export const VENUES: VenueData[] = [
   { name: "Gra.fun", chain: "bnb", perday: 920, liq: 4800, extract: 56, surv: 3.3 },
   { name: "PancakeSwap v3", chain: "bnb", perday: 1080, liq: 9600, extract: 44, surv: 4.5 },
 
-  // Robinhood (2 venues)
-  { name: "PAIR", chain: "rh", perday: 310, liq: 12400, extract: 62, surv: 3.1 },
-  { name: "Robinhood Settlement", chain: "rh", perday: 450, liq: 18500, extract: 24, surv: 6.8 },
+  // Robinhood Chain (8 venues) - Ecosystem live since July 2026
+  // Bonding-curve
+  { name: "hood.fun", chain: "rh", perday: 850, liq: 6400, extract: 48, surv: 4.9 },
+  { name: "Flap", chain: "rh", perday: 620, liq: 5800, extract: 52, surv: 4.2 },
+  { name: "Openfair", chain: "rh", perday: 380, liq: 7200, extract: 41, surv: 5.4 },
+  // Direct Liquidity (no migration)
+  { name: "Pons", chain: "rh", perday: 490, liq: 15600, extract: 28, surv: 6.7 },
+  { name: "RobinPad", chain: "rh", perday: 340, liq: 14200, extract: 31, surv: 6.1 },
+  // AI-agent
+  { name: "Bankr", chain: "rh", perday: 510, liq: 13900, extract: 33, surv: 6.3 },
+  { name: "NOXA Fun", chain: "rh", perday: 290, liq: 8900, extract: 39, surv: 5.1 },
+  // AMM / Orderbook
+  { name: "PAIR", chain: "rh", perday: 310, liq: 12400, extract: 45, surv: 5.8 },
 
   // Arc (2 venues)
   { name: "ArcSwap", chain: "arc", perday: 310, liq: 8400, extract: 42, surv: 3.8 },

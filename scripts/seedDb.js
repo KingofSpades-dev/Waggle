@@ -10,8 +10,8 @@ const SEED_CHAINS = [
   { key: 'sol', name: 'Solana', hue: '#7b45d8', dataSources: ['GeckoTerminal', 'DefiLlama'] },
   { key: 'base', name: 'Base', hue: '#0091b0', dataSources: ['GeckoTerminal', 'DexScreener'] },
   { key: 'bnb', name: 'BNB Chain', hue: '#c08a00', dataSources: ['DefiLlama', 'DexScreener'] },
-  { key: 'rh', name: 'Robinhood', hue: '#12b981', dataSources: ['self indexed from RPC'] },
-  { key: 'arc', name: 'Arc', hue: '#e07b28', dataSources: ['no collector yet'] }
+  { key: 'rh', name: 'Robinhood', hue: '#12b981', dataSources: ['Pons', 'Flap', 'hood.fun', 'Bankr', 'RPC'] },
+  { key: 'arc', name: 'Arc', hue: '#e07b28', dataSources: ['DexScreener', 'ArcSwap'] }
 ];
 
 const SEED_VENUES = [
@@ -33,9 +33,19 @@ const SEED_VENUES = [
   { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
   { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
 
-  // Robinhood (2)
+  // Robinhood Chain (8 venues) - Ecosystem live since July 2026
+  // Bonding-curve
+  { chainKey: 'rh', name: 'hood.fun', key: 'hood_fun', curveType: 'bonding_curve' },
+  { chainKey: 'rh', name: 'Flap', key: 'flap', curveType: 'bonding_curve' },
+  { chainKey: 'rh', name: 'Openfair', key: 'openfair', curveType: 'fair_curve' },
+  // Direct Liquidity (no migration)
+  { chainKey: 'rh', name: 'Pons', key: 'pons', curveType: 'direct_liquidity' },
+  { chainKey: 'rh', name: 'RobinPad', key: 'robinpad', curveType: 'direct_liquidity' },
+  // AI-agent
+  { chainKey: 'rh', name: 'Bankr', key: 'bankr', curveType: 'agent_bonding' },
+  { chainKey: 'rh', name: 'NOXA Fun', key: 'noxa_fun', curveType: 'agent_bonding' },
+  // AMM / Orderbook
   { chainKey: 'rh', name: 'PAIR', key: 'pair', curveType: 'amm' },
-  { chainKey: 'rh', name: 'Robinhood Settlement', key: 'rh_settle', curveType: 'institutional_book' },
 
   // Arc (2)
   { chainKey: 'arc', name: 'ArcSwap', key: 'arc_swap', curveType: 'amm' },

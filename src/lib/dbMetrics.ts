@@ -111,9 +111,19 @@ function getFallbackDatabaseMetrics(): MatrixResponse {
     { id: 'ven-grafun', name: 'Gra.fun', key: 'grafun', chainKey: 'bnb', curveType: 'fair_curve', launchesCount: 920, survivalRatePct: 46.5, avgInitialLiquidityUsd: 4800, extractionPct: 36.8 },
     { id: 'ven-pancake', name: 'PancakeSwap v3', key: 'pancakeswap', chainKey: 'bnb', curveType: 'cpmm_amm', launchesCount: 1080, survivalRatePct: 52.5, avgInitialLiquidityUsd: 9600, extractionPct: 31.8 },
 
-    // Robinhood (2 venues)
-    { id: 'ven-pair', name: 'PAIR', key: 'pair', chainKey: 'rh', curveType: 'amm', launchesCount: 310, survivalRatePct: 58.0, avgInitialLiquidityUsd: 12400, extractionPct: 29.5 },
-    { id: 'ven-rh-settle', name: 'Robinhood Settlement', key: 'rh_settle', chainKey: 'rh', curveType: 'institutional_book', launchesCount: 1240, survivalRatePct: 68.0, avgInitialLiquidityUsd: 18500, extractionPct: 18.5 },
+    // Robinhood Chain (8 venues) - Ecosystem live since July 2026
+    // Bonding-curve
+    { id: 'ven-hood-fun', name: 'hood.fun', key: 'hood_fun', chainKey: 'rh', curveType: 'bonding_curve', launchesCount: 850, survivalRatePct: 49.0, avgInitialLiquidityUsd: 6400, extractionPct: 48.0 },
+    { id: 'ven-flap', name: 'Flap', key: 'flap', chainKey: 'rh', curveType: 'bonding_curve', launchesCount: 620, survivalRatePct: 42.0, avgInitialLiquidityUsd: 5800, extractionPct: 52.0 },
+    { id: 'ven-openfair', name: 'Openfair', key: 'openfair', chainKey: 'rh', curveType: 'fair_curve', launchesCount: 380, survivalRatePct: 54.0, avgInitialLiquidityUsd: 7200, extractionPct: 41.0 },
+    // Direct Liquidity (no migration)
+    { id: 'ven-pons', name: 'Pons', key: 'pons', chainKey: 'rh', curveType: 'direct_liquidity', launchesCount: 490, survivalRatePct: 67.0, avgInitialLiquidityUsd: 15600, extractionPct: 28.0 },
+    { id: 'ven-robinpad', name: 'RobinPad', key: 'robinpad', chainKey: 'rh', curveType: 'direct_liquidity', launchesCount: 340, survivalRatePct: 61.0, avgInitialLiquidityUsd: 14200, extractionPct: 31.0 },
+    // AI-agent
+    { id: 'ven-bankr', name: 'Bankr', key: 'bankr', chainKey: 'rh', curveType: 'agent_bonding', launchesCount: 510, survivalRatePct: 63.0, avgInitialLiquidityUsd: 13900, extractionPct: 33.0 },
+    { id: 'ven-noxa-fun', name: 'NOXA Fun', key: 'noxa_fun', chainKey: 'rh', curveType: 'agent_bonding', launchesCount: 290, survivalRatePct: 51.0, avgInitialLiquidityUsd: 8900, extractionPct: 39.0 },
+    // AMM / Orderbook
+    { id: 'ven-pair', name: 'PAIR', key: 'pair', chainKey: 'rh', curveType: 'amm', launchesCount: 310, survivalRatePct: 58.0, avgInitialLiquidityUsd: 12400, extractionPct: 45.0 },
 
     // Arc (2 venues)
     { id: 'ven-arc-swap', name: 'ArcSwap', key: 'arc_swap', chainKey: 'arc', curveType: 'amm', launchesCount: 310, survivalRatePct: 51.0, avgInitialLiquidityUsd: 8400, extractionPct: 33.0 },

@@ -188,7 +188,13 @@ async function runSingleCycle() {
         else if (dexId.includes('pancake') || dexId.includes('cake')) venueKey = 'pancakeswap';
         else venueKey = 'four_meme';
       } else if (chainKey === 'rh') {
-        if (dexId.includes('settle') || poolName.includes('book')) venueKey = 'rh_settle';
+        if (dexId.includes('hood') || poolName.includes('hood')) venueKey = 'hood_fun';
+        else if (dexId.includes('flap') || poolName.includes('flap')) venueKey = 'flap';
+        else if (dexId.includes('pons') || poolName.includes('pons')) venueKey = 'pons';
+        else if (dexId.includes('bankr') || poolName.includes('bankr')) venueKey = 'bankr';
+        else if (dexId.includes('robinpad') || poolName.includes('robinpad')) venueKey = 'robinpad';
+        else if (dexId.includes('fair') || poolName.includes('openfair')) venueKey = 'openfair';
+        else if (dexId.includes('noxa') || poolName.includes('noxa')) venueKey = 'noxa_fun';
         else venueKey = 'pair';
       } else if (chainKey === 'arc') {
         if (dexId.includes('astro') || poolName.includes('axv')) venueKey = 'astrovault';
