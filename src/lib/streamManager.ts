@@ -21,6 +21,14 @@ interface CollectorStatus {
   latency_ms: number;
 }
 
+function formatTimestamp(d: Date): string {
+  const hours = String(d.getUTCHours()).padStart(2, '0');
+  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(d.getUTCSeconds()).padStart(2, '0');
+  const ms = String(d.getUTCMilliseconds()).padStart(3, '0');
+  return `${hours}:${minutes}:${seconds}.${ms}`;
+}
+
 class LiveStreamManager {
   private totalLaunches = 7502;
   private events: StreamLogEntry[] = [];
@@ -95,10 +103,9 @@ class LiveStreamManager {
 
     this.events = seeds.map((s, idx) => {
       const d = new Date(now - (seeds.length - idx) * 2000);
-      const timeStr = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}:${String(d.getUTCSeconds()).padStart(2, '0')}.${String(d.getUTCMilliseconds()).padStart(3, '0')}`;
       return {
         ...s,
-        timestamp: timeStr
+        timestamp: formatTimestamp(d)
       };
     });
   }
@@ -189,7 +196,7 @@ class LiveStreamManager {
       const chains: ('sol' | 'base' | 'bnb' | 'rh' | 'arc')[] = ['sol', 'base', 'bnb', 'rh', 'arc'];
       const chain = chains[Math.floor(Math.random() * chains.length)];
       const now = new Date();
-      const timeStr = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}:${String(now.getUTCSeconds()).padStart(2, '0')}.${String(now.getUTCMilliseconds()).padStart(3, '0')}`;
+      const timeStr = formatTimestamp(now);
 
       let newEntry: StreamLogEntry | null = null;
       const cached = this.poolCache[chain];
