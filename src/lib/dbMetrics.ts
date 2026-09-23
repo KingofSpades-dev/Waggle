@@ -177,6 +177,9 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
     ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 2000
   });
+  client.on('error', () => {
+    // Prevent unhandled error events when socket terminates
+  });
 
   try {
     await client.connect();
@@ -319,10 +322,11 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
       console.warn('[dbMetrics] Database unavailable, circuit breaker active for 30s:', msg);
     }
 
-    try { await client.end(); } catch {}
     const fallback = getFallbackDatabaseMetrics();
     cachedMetricsResponse = fallback;
     lastCachedMetricsTime = Date.now();
     return fallback;
+  } finally {
+    try { await client.end(); } catch {}
   }
 }
