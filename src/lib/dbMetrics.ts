@@ -106,9 +106,8 @@ function getFallbackDatabaseMetrics(): MatrixResponse {
     { id: 'ven-zora', name: 'Zora Protocol', key: 'zora', chainKey: 'base', curveType: 'bonding_curve', launchesCount: 410, survivalRatePct: 51.6, avgInitialLiquidityUsd: 6800, extractionPct: 33.2 },
     { id: 'ven-aerodrome', name: 'Aerodrome SlipStream', key: 'aerodrome', chainKey: 'base', curveType: 'concentrated_amm', launchesCount: 2270, survivalRatePct: 64.8, avgInitialLiquidityUsd: 14500, extractionPct: 22.4 },
 
-    // BNB Chain (3 venues)
+    // BNB Chain (2 venues)
     { id: 'ven-fourmeme', name: 'Four.meme', key: 'four_meme', chainKey: 'bnb', curveType: 'linear_bonding', launchesCount: 2100, survivalRatePct: 41.2, avgInitialLiquidityUsd: 3900, extractionPct: 42.1 },
-    { id: 'ven-grafun', name: 'Gra.fun', key: 'grafun', chainKey: 'bnb', curveType: 'fair_curve', launchesCount: 920, survivalRatePct: 46.5, avgInitialLiquidityUsd: 4800, extractionPct: 36.8 },
     { id: 'ven-pancake', name: 'PancakeSwap v3', key: 'pancakeswap', chainKey: 'bnb', curveType: 'cpmm_amm', launchesCount: 1080, survivalRatePct: 52.5, avgInitialLiquidityUsd: 9600, extractionPct: 31.8 },
 
     // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)

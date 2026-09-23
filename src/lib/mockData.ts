@@ -72,9 +72,8 @@ export const VENUES: VenueData[] = [
   { name: "Zora Protocol", chain: "base", perday: 410, liq: 6800, extract: 39, surv: 4.2 },
   { name: "Aerodrome SlipStream", chain: "base", perday: 2270, liq: 14500, extract: 31, surv: 6.4 },
 
-  // BNB Chain (3 venues)
+  // BNB Chain (2 venues)
   { name: "Four.meme", chain: "bnb", perday: 1600, liq: 3900, extract: 69, surv: 2.4 },
-  { name: "Gra.fun", chain: "bnb", perday: 920, liq: 4800, extract: 56, surv: 3.3 },
   { name: "PancakeSwap v3", chain: "bnb", perday: 1080, liq: 9600, extract: 44, surv: 4.5 },
 
   // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)

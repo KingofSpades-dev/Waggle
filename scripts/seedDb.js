@@ -28,9 +28,8 @@ const SEED_VENUES = [
   { chainKey: 'base', name: 'Zora Protocol', key: 'zora', curveType: 'bonding_curve' },
   { chainKey: 'base', name: 'Aerodrome SlipStream', key: 'aerodrome', curveType: 'concentrated_amm' },
 
-  // BNB Chain (3)
+  // BNB Chain (2)
   { chainKey: 'bnb', name: 'Four.meme', key: 'four_meme', curveType: 'bonding_curve' },
-  { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
   { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
 
   // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)

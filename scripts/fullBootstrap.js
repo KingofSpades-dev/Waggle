@@ -179,9 +179,8 @@ async function main() {
       { chainKey: 'base', name: 'Zora Protocol', key: 'zora', curveType: 'bonding_curve' },
       { chainKey: 'base', name: 'Aerodrome SlipStream', key: 'aerodrome', curveType: 'concentrated_amm' },
 
-      // BNB Chain (3 venues)
+      // BNB Chain (2 venues)
       { chainKey: 'bnb', name: 'Four.meme', key: 'four_meme', curveType: 'bonding_curve' },
-      { chainKey: 'bnb', name: 'Gra.fun', key: 'grafun', curveType: 'fair_curve' },
       { chainKey: 'bnb', name: 'PancakeSwap v3', key: 'pancakeswap', curveType: 'amm' },
 
       // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)
@@ -296,8 +295,7 @@ async function main() {
       const attr = p.attributes || {};
       const name = (attr.name || '').toLowerCase();
       let vKey = 'four_meme';
-      if (name.includes('gra') || name.includes('floki')) vKey = 'grafun';
-      else if (name.includes('pancake') || name.includes('cake')) vKey = 'pancakeswap';
+      if (name.includes('pancake') || name.includes('cake')) vKey = 'pancakeswap';
       const cAt = attr.pool_created_at ? new Date(attr.pool_created_at) : new Date();
       if (attr.address) {
         candidateLaunches.push({
@@ -353,9 +351,8 @@ async function main() {
         { vKey: 'aerodrome', weight: 0.25, baseLiq: 14500 }
       ],
       bnb: [
-        { vKey: 'four_meme', weight: 0.45, baseLiq: 3900 },
-        { vKey: 'grafun', weight: 0.25, baseLiq: 4800 },
-        { vKey: 'pancakeswap', weight: 0.30, baseLiq: 9600 }
+        { vKey: 'four_meme', weight: 0.60, baseLiq: 3900 },
+        { vKey: 'pancakeswap', weight: 0.40, baseLiq: 9600 }
       ],
       rh: [
         { vKey: 'hood_fun', weight: 0.40, baseLiq: 6400 },

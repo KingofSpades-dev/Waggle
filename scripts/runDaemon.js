@@ -184,8 +184,7 @@ async function runSingleCycle() {
         else if (dexId.includes('aero') || dexId.includes('slipstream')) venueKey = 'aerodrome';
         else venueKey = 'clanker';
       } else if (chainKey === 'bnb') {
-        if (dexId.includes('gra') || poolName.includes('floki')) venueKey = 'grafun';
-        else if (dexId.includes('pancake') || dexId.includes('cake')) venueKey = 'pancakeswap';
+        if (dexId.includes('pancake') || dexId.includes('cake')) venueKey = 'pancakeswap';
         else venueKey = 'four_meme';
       } else if (chainKey === 'rh') {
         if (dexId.includes('hood') || poolName.includes('hood')) venueKey = 'hood_fun';
