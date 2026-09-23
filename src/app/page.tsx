@@ -240,28 +240,102 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="hero">
         <HoneycombAmbient />
-        <div className="livebar">
-          <span className="dot"></span>
-          <span id="collectors">5 collectors running, 0 not started</span>
-          <span>·</span>
-          <span>
-            updated <b>{lastUpdatedSec < 5 ? 'just now' : `${lastUpdatedSec}s ago`}</b>
-          </span>
-          <span className="pill">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: 5 }}>
-              <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
-            </svg>
-            v1.0 live engine
-          </span>
+        <div className="hero-grid">
+          <div className="hero-content">
+            <div className="livebar">
+              <span className="dot"></span>
+              <span id="collectors">5 collectors running, 0 not started</span>
+              <span>·</span>
+              <span>
+                updated <b>{lastUpdatedSec < 5 ? 'just now' : `${lastUpdatedSec}s ago`}</b>
+              </span>
+              <span className="pill">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: 5 }}>
+                  <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+                </svg>
+                v1.0 live engine
+              </span>
+            </div>
+            <h1>
+              Too many chains.<br />
+              Too many launchpads.<br />
+              <em>Waggle tells you which one is the best for your project.</em>
+            </h1>
+            <p className="lede">
+              Describe what you built. Waggle scores it against where surviving launches actually happen, then tells you the chain, the venue, and the hour window that fit its shape. It will not tell you whether it will work, because nothing in this data can.
+            </p>
+            <div className="hero-trust-tags">
+              <span className="hero-trust-tag">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+                </svg>
+                Zero-sponsor bias
+              </span>
+              <span className="hero-trust-tag">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+                </svg>
+                Empirical 7-day retention
+              </span>
+              <span className="hero-trust-tag">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+                </svg>
+                Live RPC indexing
+              </span>
+            </div>
+          </div>
+
+          <div className="hero-terminal-card">
+            <div className="terminal-header">
+              <div className="terminal-dots">
+                <span className="dot red"></span>
+                <span className="dot yellow"></span>
+                <span className="dot green"></span>
+              </div>
+              <div className="terminal-title">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5">
+                  <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+                </svg>
+                <span>scout_agent.live — Opus 5.5</span>
+              </div>
+              <div className="terminal-badge">
+                <span className="pulse-dot"></span>
+                <span>OPUS 5.5 ACTIVE</span>
+              </div>
+            </div>
+
+            <div className="terminal-video-frame">
+              <video
+                src="/videos/bee_typing.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="terminal-video"
+              />
+              <div className="terminal-scanline"></div>
+            </div>
+
+            <div className="terminal-footer">
+              <div className="terminal-stat">
+                <span className="stat-label">AI AGENT</span>
+                <span className="stat-val">Opus 5.5</span>
+              </div>
+              <div className="terminal-stat-divider"></div>
+              <div className="terminal-stat">
+                <span className="stat-label">REASONING</span>
+                <span className="stat-val text-amber">Autonomous</span>
+              </div>
+              <div className="terminal-stat-divider"></div>
+              <div className="terminal-stat">
+                <span className="stat-label">RPC TELEMETRY</span>
+                <span className="stat-val text-emerald">5/5 Active ✓</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <h1>
-          Too many chains.<br />
-          Too many launchpads.<br />
-          <em>Waggle tells you which one is the best for your project.</em>
-        </h1>
-        <p className="lede">
-          Describe what you built. Waggle scores it against where surviving launches actually happen, then tells you the chain, the venue, and the hour window that fit its shape. It will not tell you whether it will work, because nothing in this data can.
-        </p>
 
         <div className="submit">
           <label htmlFor="desc">What are you launching</label>
