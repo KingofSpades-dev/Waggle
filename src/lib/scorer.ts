@@ -203,6 +203,53 @@ function findMatchingVenue(venueKey: string | undefined, chainKey: string, dbVen
   return found || dbVenues[0];
 }
 
+function parseJsonFromLlmOutput(rawContent: string): any {
+  if (!rawContent || typeof rawContent !== 'string') return null;
+
+  const content = rawContent.trim();
+  // 1. Direct JSON parse
+  try {
+    return JSON.parse(content);
+  } catch {}
+
+  // 2. Extract from markdown codeblock ```json ... ``` or ``` ... ```
+  const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeBlockMatch && codeBlockMatch[1]) {
+    try {
+      return JSON.parse(codeBlockMatch[1].trim());
+    } catch {}
+  }
+
+  // 3. Find outer braces {...}
+  const firstBrace = content.indexOf('{');
+  const lastBrace = content.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    const candidate = content.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch {}
+
+    // Fallback: scan nested JSON objects containing required keys
+    let start = firstBrace;
+    while (start < lastBrace && start !== -1) {
+      let end = content.indexOf('}', start);
+      while (end !== -1 && end <= lastBrace) {
+        const subCandidate = content.slice(start, end + 1);
+        try {
+          const parsed = JSON.parse(subCandidate);
+          if (parsed && typeof parsed === 'object' && (parsed.selected_chain_key || parsed.read_as || parsed.composite_score)) {
+            return parsed;
+          }
+        } catch {}
+        end = content.indexOf('}', end + 1);
+      }
+      start = content.indexOf('{', start + 1);
+    }
+  }
+
+  return null;
+}
+
 /**
  * Attempts real-time deep AI evaluation using Xiaomi Mimo / OpenAI-compatible endpoint.
  * Returns null if LLM is unconfigured, unreachable, or returns quota/rate error.
@@ -251,7 +298,7 @@ TASK:
    - mechanics_summary: Breakdown of how this venue's bonding curve or AMM handles the launch.
    - meta_reading: Market congestion assessment (e.g. busy with attention vs crowded with noise vs quiet).
 
-RETURN JSON ONLY with this structure:
+RETURN PURE JSON ONLY with this structure:
 {
   "selected_chain_key": "sol"|"base"|"bnb"|"rh"|"arc",
   "selected_venue_key": "pump_fun"|"virtuals"|"aerodrome"|"raydium"|"four_meme"|"pancakeswap"|"pons"|"astrovault",
@@ -277,7 +324,7 @@ RETURN JSON ONLY with this structure:
         temperature: 0.1,
         max_tokens: 4096,
         messages: [
-          { role: 'system', content: 'You are Waggle Onchain AI Scout. Return pure JSON only with 100% bespoke, fluid, non-generic technical analysis tailored to the specific project description. Never use generic template boilerplate.' },
+          { role: 'system', content: 'You are Waggle Onchain AI Scout. Return pure JSON only with 100% bespoke, fluid, non-generic technical analysis tailored to the specific project description. Never output generic template boilerplate.' },
           { role: 'user', content: prompt }
         ]
       })
@@ -290,11 +337,15 @@ RETURN JSON ONLY with this structure:
     }
 
     const data = await res.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    const match = content.match(/\{[\s\S]*\}/);
-    if (!match) return null;
+    const choice = data.choices?.[0]?.message;
+    const rawContent = choice?.content || choice?.reasoning_content || '';
+    const parsed = parseJsonFromLlmOutput(rawContent);
 
-    const parsed = JSON.parse(match[0]);
+    if (!parsed) {
+      console.warn('[Scorer] Failed to parse valid JSON from Mimo AI response:', rawContent.slice(0, 200));
+      return null;
+    }
+
     const topChain = findMatchingChain(parsed.selected_chain_key, dbMetrics.chains);
     const topVenue = findMatchingVenue(parsed.selected_venue_key, topChain.key, dbMetrics.venues);
 
@@ -537,6 +588,10 @@ function evaluateWithQuantitativeEngine(
   let fitReason = "";
   let mechanicsSummary = "";
 
+  const cleanDesc = sanitizeInputText(req.description || '');
+  const descExcerpt = cleanDesc.length > 80 ? cleanDesc.slice(0, 80) + '...' : cleanDesc;
+  const projectTitle = features.detectedNameOrKeywords[0] || (features.isAgent ? 'Autonomous AI Agent' : 'Token Project');
+
   const treasuryNote = features.isSmallTreasury
     ? "an unseeded micro-treasury (<$5,000) vulnerable to front-running"
     : "an established liquidity profile";
@@ -546,28 +601,28 @@ function evaluateWithQuantitativeEngine(
     : "organic community interest";
 
   if (top.chain.key === 'base') {
-    readAs = `Technical Analysis: ${projectName} demonstrates strong structural alignment with Base (${top.chainFit}% fit). Base's low L2 execution fees and dense EVM smart contract composability provide ideal execution conditions for ${features.isAgent ? 'autonomous agent loops' : 'protocol rebalancing'}, outperforming alternative deployment options by ${(top.chainFit - (alternatives[0]?.composite_score || 60))} composite points.`;
+    readAs = `${projectTitle} ("${descExcerpt}") achieves optimal structural synergy with ${top.chain.name} (${top.chainFit}% fit) and ${top.topVenue.name}. ${top.chain.name}'s low L2 execution fees and dense EVM composability provide ideal execution conditions for ${features.isAgent ? 'autonomous agent loops' : 'token launches'}, outperforming alternative deployment options by ${(top.chainFit - (alternatives[0]?.composite_score || 60))} composite points.`;
     if (top.topVenue.key === 'virtuals') {
-      fitReason = `Virtuals Protocol's agent fair-launch curve provides dedicated autonomous agent co-ownership tokenomics, protecting ${projectName} against predatory MEV sniper extraction (${top.topVenue.extractionPct}% observed MEV take) without requiring upfront seed LP funding.`;
+      fitReason = `Virtuals Protocol's agent fair-launch curve provides dedicated autonomous agent co-ownership tokenomics, protecting ${projectTitle} against predatory MEV sniper extraction (${top.topVenue.extractionPct}% observed MEV take) without requiring upfront seed LP funding.`;
       mechanicsSummary = `Fair-launch bonding curve designed specifically for autonomous AI agents with co-ownership staking, continuous revenue distribution routing, and automatic graduation into Aerodrome liquidity.`;
     } else {
       fitReason = `Aerodrome Slipstream concentrated liquidity provides optimal capital efficiency for EVM protocols on Base with deep tick liquidity routing.`;
       mechanicsSummary = `Uniswap v3-style concentrated tick liquidity AMM with veAERO gauge emission voting and deep Base ecosystem liquidity routing.`;
     }
   } else if (top.chain.key === 'sol') {
-    readAs = `Technical Analysis: ${projectName} captures maximum liquidity momentum on Solana (${top.chainFit}% fit), where transaction speed and rapid token discovery are highest. Given ${audienceNote}, immediate execution speed and low friction outweigh slower institutional validation.`;
-    fitReason = `Pump.fun eliminates upfront capital requirements, deploying a deterministic bonding curve that insulates ${projectName} from initial DEX LP drain while tapping into Solana's peak retail volume.`;
+    readAs = `${projectTitle} ("${descExcerpt}") captures maximum liquidity momentum on Solana (${top.chainFit}% fit), where transaction speed and rapid token discovery are highest. Given ${audienceNote}, immediate execution speed and low friction outweigh slower institutional validation.`;
+    fitReason = `Pump.fun eliminates upfront capital requirements, deploying a deterministic bonding curve that insulates ${projectTitle} from initial DEX LP drain while tapping into Solana's peak retail volume.`;
     mechanicsSummary = `Zero upfront liquidity required with deterministic price curve until $69k market cap, migrating automatically into Raydium CPMM once the bonding curve completes.`;
   } else if (top.chain.key === 'bnb') {
-    readAs = `Technical Analysis: ${projectName} aligns with BNB Smart Chain's active consumer trading ecosystem (${top.chainFit}% fit), capturing sustainable 7-day retention (${top.topVenue.survivalRatePct}% venue survival).`;
+    readAs = `${projectTitle} ("${descExcerpt}") aligns with BNB Smart Chain's active consumer trading ecosystem (${top.chainFit}% fit), capturing sustainable 7-day retention (${top.topVenue.survivalRatePct}% venue survival).`;
     fitReason = `4meme provides BNB Chain's dedicated creator curve with minimal gas deployment overhead and seamless graduation into PancakeSwap deep liquidity pools.`;
     mechanicsSummary = `Linear bonding curve on BNB Smart Chain with automatic PancakeSwap LP deployment and creator incentive rewards upon curve completion.`;
   } else if (top.chain.key === 'rh') {
-    readAs = `Technical Analysis: ${projectName} aligns with Robinhood Chain's regulated institutional infrastructure (${top.chainFit}% fit). The institutional orderbook eliminates retail MEV leakage, recording the lowest sniper extraction in the industry (${top.topVenue.extractionPct}%).`;
+    readAs = `${projectTitle} ("${descExcerpt}") aligns with Robinhood Chain's regulated institutional infrastructure (${top.chainFit}% fit). The institutional orderbook eliminates retail MEV leakage, recording the lowest sniper extraction in the industry (${top.topVenue.extractionPct}%).`;
     fitReason = `Robinhood Settlement provides atomic off-chain orderbook matching with on-chain L2 batch settlement, ensuring regulatory alignment and asset-backed custody protection.`;
     mechanicsSummary = `Regulated hybrid off-chain orderbook with atomic onchain L2 batch settlement and institutional custody integration.`;
   } else {
-    readAs = `Technical Analysis: ${projectName} benefits from Arc's USDC-native predictable fee structure (${top.chainFit}% fit), avoiding cross-asset volatility for structured financial primitives.`;
+    readAs = `${projectTitle} ("${descExcerpt}") benefits from Arc's USDC-native predictable fee structure (${top.chainFit}% fit), avoiding cross-asset volatility for structured financial primitives.`;
     fitReason = `Astrovault's hybrid curve minimizes slippage for standard asset pairs and routes cross-chain Cosmos IBC liquidity.`;
     mechanicsSummary = `Slippage-minimized 1:1 AXV standard pool with integrated Cosmos IBC liquidity bridge and predictable routing curves.`;
   }
