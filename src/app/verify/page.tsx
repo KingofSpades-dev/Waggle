@@ -175,7 +175,7 @@ export default function VerifyPage() {
 
   return (
     <main className="wrap" style={{ paddingTop: '28px', paddingBottom: '32px' }}>
-      
+
       {/* Top Breadcrumbs & Chain Badge */}
       <div style={{
         display: 'flex',
@@ -218,7 +218,7 @@ export default function VerifyPage() {
             }}
           >
             <ShieldCheck size={14} style={{ color: '#059669' }} />
-            <span>View Private Proof Disclosure 🔒 ↗</span>
+            <span>View Private Proof Disclosure  ↗</span>
           </Link>
           <span style={{
             fontSize: '0.72rem',

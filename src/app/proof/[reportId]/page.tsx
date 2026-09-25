@@ -25,7 +25,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
   const formattedReportId = reportId.startsWith("0x") ? reportId : `0x${reportId}`;
 
   return (
-    <main className="wrap" style={{ paddingTop: "28px", paddingBottom: "0px" }}>
+    <main className="wrap" style={{ paddingTop: "16px", paddingBottom: "24px" }}>
       {/* Top Breadcrumb Header & Chain Badge */}
       <div
         style={{
@@ -34,9 +34,9 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
           alignItems: "center",
           fontSize: "0.78rem",
           color: "var(--dim)",
-          marginBottom: "18px",
-          paddingBottom: "10px",
-          borderBottom: "1px solid var(--line)",
+          marginBottom: "12px",
+          paddingBottom: "4px",
+          borderBottom: "none",
           flexWrap: "wrap",
           gap: "8px",
         }}
@@ -91,7 +91,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
       </div>
 
       {/* Hero Section */}
-      <section style={{ marginBottom: "20px" }}>
+      <section style={{ padding: "16px 0", borderTop: "none", marginBottom: "8px" }}>
         <div
           style={{
             display: "inline-flex",
@@ -140,7 +140,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
       </section>
 
       {/* Main Report ID Header Card */}
-      <section style={{ marginBottom: "20px" }}>
+      <section style={{ padding: "16px 0", borderTop: "none", marginBottom: "8px" }}>
         <div
           style={{
             background: "var(--panel)",
@@ -206,7 +206,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
       </section>
 
       {/* Proven Assertions Grid */}
-      <section style={{ marginBottom: "24px" }}>
+      <section style={{ padding: "16px 0", borderTop: "none", marginBottom: "12px" }}>
         <div style={{ marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
           <ShieldCheck size={18} style={{ color: "var(--navy-900)" }} />
           <h2 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--navy-900)", margin: 0 }}>
@@ -277,7 +277,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
               </p>
             </div>
 
-            <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid var(--line)" }}>
+            <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", marginBottom: "6px" }}>
                 <span style={{ color: "var(--dim)" }}>Threshold Progress</span>
                 <span style={{ fontWeight: 700, color: "#059669", fontFamily: "var(--font-mono)" }}>75.00 / 100.00</span>
@@ -344,7 +344,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
               </p>
             </div>
 
-            <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "0.72rem", color: "var(--dim)" }}>Target Ecosystem</span>
               <span style={{ fontSize: "0.74rem", fontWeight: 750, color: "var(--navy-900)", fontFamily: "var(--font-mono)" }}>
                 Arbitrum Nitro Stack (4663)
@@ -355,7 +355,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
       </section>
 
       {/* Privacy Architecture & Salt Hygiene Grid */}
-      <section style={{ marginBottom: "24px" }}>
+      <section style={{ padding: "16px 0", borderTop: "none", marginBottom: "12px" }}>
         <div style={{ marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
           <Lock size={18} style={{ color: "var(--navy-900)" }} />
           <h2 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--navy-900)", margin: 0 }}>
@@ -436,7 +436,7 @@ export default async function SelectiveDisclosurePage({ params }: PageProps) {
       </section>
 
       {/* Canonical Public Trust Wording Banner */}
-      <section style={{ marginBottom: "28px" }}>
+      <section style={{ padding: "16px 0", borderTop: "none", marginBottom: "16px" }}>
         <div
           style={{
             background: "linear-gradient(135deg, #273869 0%, #1e293b 100%)",

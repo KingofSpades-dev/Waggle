@@ -280,6 +280,48 @@ export default function HomePage() {
                 v1.0 live engine
               </span>
             </div>
+
+            <div style={{ marginBottom: 14, marginTop: 4 }}>
+              <a
+                href="https://robinhoodchain.blockscout.com/address/0x407ddd48f745916ac10a34feca21389938913af5"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '5px 14px',
+                  background: 'rgba(39, 56, 105, 0.06)',
+                  border: '1px solid #5773a6',
+                  borderRadius: 'var(--r-full)',
+                  fontSize: '0.78rem',
+                  color: '#273869',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  textDecoration: 'none'
+                }}
+                title="View Waggle Contract Address on Robinhood Chain Blockscout"
+              >
+                <span style={{
+                  fontSize: '0.66rem',
+                  fontWeight: 800,
+                  padding: '2px 6px',
+                  background: '#273869',
+                  color: '#ffffff',
+                  borderRadius: '4px',
+                  letterSpacing: '0.04em'
+                }}>CA</span>
+                <span style={{ letterSpacing: '0.02em', fontWeight: 700, color: '#273869' }}>
+                  0x407ddd48f745916ac10a34feca21389938913af5
+                </span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#405881" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
+            </div>
+
             <h1>
               Too many chains.<br />
               Too many launchpads.<br />
