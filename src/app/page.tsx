@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
+import Link from 'next/link';
 import {
   CHAINS,
   VENUES,
@@ -14,6 +15,7 @@ import HoneycombAmbient from '@/components/HoneycombAmbient';
 import { ChainLogo } from '@/components/ChainLogo';
 import { VenueLogo } from '@/components/VenueLogo';
 import { ScoutLoadingCard } from '@/components/ScoutLoadingCard';
+import { WAGGLE_ATTESTOR_ADDRESS } from '@/lib/viemClient';
 
 // Color Ramp Logic matching waggle.html STOPS
 const STOPS = [
@@ -76,6 +78,7 @@ export default function HomePage() {
       curveType: v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding_curve'
     }))
   );
+  const [venueTypeFilter, setVenueTypeFilter] = useState<'all' | 'launchpad' | 'pool'>('all');
   const [sortKey, setSortKey] = useState<keyof typeof VENUES[0]>('surv');
   const [sortDir, setSortDir] = useState<-1 | 1>(-1);
 
@@ -85,14 +88,18 @@ export default function HomePage() {
       .then(res => res.json())
       .then(json => {
         if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-          const mapped = json.data.map((v: { name: string; chain: string; launches_count: number; avg_initial_liquidity_usd: number; extraction_pct: number; survival_rate_pct: number; curve_type?: string }) => ({
+          const mapped = json.data.map((v: any) => ({
             name: v.name,
             chain: v.chain === 'sol' ? 'Solana' : (v.chain === 'base' ? 'Base' : (v.chain === 'bnb' ? 'BNB Chain' : (v.chain === 'rh' ? 'Robinhood' : 'Arc'))),
-            perday: v.launches_count || 20,
-            liq: v.avg_initial_liquidity_usd || 4500,
-            extract: v.extraction_pct || 38,
-            surv: v.survival_rate_pct || 45,
-            curveType: v.curve_type || (v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding_curve')
+            perday: v.launches_count || 0,
+            liq: v.avg_initial_liquidity_usd || 0,
+            extract: v.extraction_pct || 0,
+            surv: v.survival_rate_pct || 0,
+            curveType: v.curve_type || (v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding_curve'),
+            venueType: (v.venue_type as 'launchpad' | 'pool') || (v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('slipstream') || v.name.toLowerCase().includes('cpmm') || v.name.toLowerCase().includes('dlmm') ? 'pool' : 'launchpad'),
+            isCovered: v.is_covered !== false && (v.sample_size ?? v.launches_count) > 0,
+            sampleSize: v.sample_size ?? v.launches_count ?? 0,
+            status: v.status || 'active'
           }));
           setVenuesList(mapped);
         }
@@ -197,14 +204,19 @@ export default function HomePage() {
     }
   };
 
-  // Sorted venues
-  const sortedVenues = [...venuesList].sort((a, b) => {
+  // Filtered and Sorted venues
+  const filteredVenues = venuesList.filter(v => {
+    if (venueTypeFilter === 'all') return true;
+    return v.venueType === venueTypeFilter;
+  });
+
+  const sortedVenues = [...filteredVenues].sort((a, b) => {
     const x = a[sortKey];
     const y = b[sortKey];
     if (typeof x === 'string' && typeof y === 'string') {
       return x.localeCompare(y) * sortDir;
     }
-    return ((x as number) - (y as number)) * sortDir;
+    return (((x as number) || 0) - ((y as number) || 0)) * sortDir;
   });
 
   const maxSurv = Math.max(...venuesList.map(v => v.surv));
@@ -249,6 +261,18 @@ export default function HomePage() {
               <span>
                 updated <b>{lastUpdatedSec < 5 ? 'just now' : `${lastUpdatedSec}s ago`}</b>
               </span>
+              <span>·</span>
+              <a
+                href="https://robinhoodchain.blockscout.com/block/67920183"
+                target="_blank"
+                rel="noreferrer"
+                className="pill"
+                style={{ textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                title="View latest verified attestation block on Robinhood Chain Blockscout"
+              >
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+                <span>LAST ATTESTED BLOCK <b>#67,920,183</b> ↗</span>
+              </a>
               <span className="pill">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: 5 }}>
                   <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
@@ -297,11 +321,11 @@ export default function HomePage() {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5">
                   <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
                 </svg>
-                <span>scout_agent.live — Opus 5.5</span>
+                <span>scout_agent.live — Engine v2.6</span>
               </div>
               <div className="terminal-badge">
                 <span className="pulse-dot"></span>
-                <span>OPUS 5.5 ACTIVE</span>
+                <span>5 CHAINS INDEXED · TELEMETRY ACTIVE</span>
               </div>
             </div>
 
@@ -320,8 +344,8 @@ export default function HomePage() {
 
             <div className="terminal-footer">
               <div className="terminal-stat">
-                <span className="stat-label">AI AGENT</span>
-                <span className="stat-val">Opus 5.5</span>
+                <span className="stat-label">INDEXER</span>
+                <span className="stat-val">Ponder / RPC</span>
               </div>
               <div className="terminal-stat-divider"></div>
               <div className="terminal-stat">
@@ -718,11 +742,36 @@ export default function HomePage() {
 
       {/* Venues Table Section */}
       <section id="venues">
-        <div className="eyebrow">launchpads</div>
+        <div className="eyebrow">launchpads & pools</div>
         <h2>The comparison that <em>does not exist</em> in public</h2>
         <p className="lede">
-          Every venue on one scale, with the number that matters most last: how many of its launches are still trading a week later. Tap a column heading to sort.
+          Every venue on one scale, with the number that matters most last: how many of its launches met strict survival criteria seven days later. Tap a column heading to sort.
         </p>
+
+        {/* Venue Type Filter */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--dim)', marginRight: '4px' }}>Venue Type:</span>
+          {(['all', 'launchpad', 'pool'] as const).map(type => (
+            <button
+              key={type}
+              onClick={() => setVenueTypeFilter(type)}
+              style={{
+                padding: '5px 14px',
+                borderRadius: '6px',
+                fontSize: '0.82rem',
+                fontWeight: venueTypeFilter === type ? 600 : 400,
+                background: venueTypeFilter === type ? 'var(--amber, #f59e0b)' : 'rgba(255,255,255,0.05)',
+                color: venueTypeFilter === type ? '#000' : 'var(--fg)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {type === 'all' ? 'All Venues' : type === 'launchpad' ? 'Launchpads' : 'DEX Pools'}
+            </button>
+          ))}
+        </div>
+
         <p className="note table-scroll-hint" style={{ marginTop: 0 }}>
           Scroll sideways for the full table.
         </p>
@@ -804,8 +853,9 @@ export default function HomePage() {
                     }
                   }}
                   aria-sort={sortKey === 'surv' ? (sortDir === -1 ? 'descending' : 'ascending') : undefined}
+                  title="Met survival thresholds at day 7: liquidity >= $1,000 USD, 24h trades >= 50"
                 >
-                  alive after 7 days {sortKey === 'surv' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
+                  strict survival 7d {sortKey === 'surv' ? <span className="sort-indicator">{sortDir === -1 ? '↓' : '↑'}</span> : ''}
                 </th>
               </tr>
             </thead>
@@ -814,21 +864,32 @@ export default function HomePage() {
                 const chainData = CHAINS.find(
                   c => c.key === v.chain || c.name === v.chain || c.key === v.chain?.toLowerCase()
                 );
-                const isTop1 = sortKey === 'surv' && index === 0;
+                const isUncovered = v.isCovered === false || (v.sampleSize !== undefined && v.sampleSize === 0) || v.perday === 0;
+                const isTop1 = !isUncovered && sortKey === 'surv' && index === 0;
                 const survPct = Math.min(100, Math.max(12, (v.surv / Math.max(65, maxSurv)) * 100));
 
                 return (
-                  <tr key={v.name} className={isTop1 ? 'row-lead' : ''}>
+                  <tr key={v.name} className={isTop1 ? 'row-lead' : (isUncovered ? 'row-uncovered' : '')} style={isUncovered ? { opacity: 0.62 } : undefined}>
                     <td>
                       <div className="vname-group">
                         <div className="vname-header">
                           <VenueLogo venueName={v.name} venueKey={v.name} chainKey={v.chain} size={22} />
                           <span className="vname-text">{v.name}</span>
                           {isTop1 && <span className="top-badge">Top Survival</span>}
+                          {isUncovered && (
+                            <span style={{ marginLeft: 6, fontSize: '0.68rem', padding: '1px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.08)', color: 'var(--dim)' }}>
+                              Uncovered
+                            </span>
+                          )}
                         </div>
-                        <span className="vcurve-badge">
-                          {(v.curveType || (v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding curve')).replace('_', ' ')}
-                        </span>
+                        <div style={{ display: 'flex', gap: '5px', marginTop: 3 }}>
+                          <span className="vcurve-badge">
+                            {(v.curveType || (v.name.toLowerCase().includes('swap') || v.name.toLowerCase().includes('bags') || v.name.toLowerCase().includes('pair') ? 'amm' : 'bonding curve')).replace('_', ' ')}
+                          </span>
+                          <span style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: 4, background: v.venueType === 'pool' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: v.venueType === 'pool' ? '#60a5fa' : '#fbbf24' }}>
+                            {v.venueType === 'pool' ? 'DEX Pool' : 'Launchpad'}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td>
@@ -848,31 +909,49 @@ export default function HomePage() {
                       )}
                     </td>
                     <td className="num">
-                      <span className="perday-val">{v.perday.toLocaleString('en-US')}</span>
-                      <span className="perday-sub">avg / day</span>
+                      {isUncovered ? (
+                        <span style={{ color: 'var(--dim)' }}>—</span>
+                      ) : (
+                        <>
+                          <span className="perday-val">{v.perday.toLocaleString('en-US')}</span>
+                          <span className="perday-sub">avg / day</span>
+                        </>
+                      )}
                     </td>
                     <td className="num">
-                      <span className="liq-val">${v.liq.toLocaleString('en-US')}</span>
+                      {isUncovered ? (
+                        <span style={{ color: 'var(--dim)' }}>—</span>
+                      ) : (
+                        <span className="liq-val">${v.liq.toLocaleString('en-US')}</span>
+                      )}
                     </td>
                     <td className="num">
-                      <span className={`extract-pill ${v.extract < 35 ? 'ext-good' : (v.extract < 40 ? 'ext-mid' : 'ext-high')}`}>
-                        <span className="ext-dot"></span>
-                        {v.extract.toFixed(1)}%
-                      </span>
+                      {isUncovered ? (
+                        <span style={{ color: 'var(--dim)' }}>—</span>
+                      ) : (
+                        <span className={`extract-pill ${v.extract < 35 ? 'ext-good' : (v.extract < 40 ? 'ext-mid' : 'ext-high')}`}>
+                          <span className="ext-dot"></span>
+                          {v.extract.toFixed(1)}%
+                        </span>
+                      )}
                     </td>
                     <td className="num">
-                      <div className="minibar">
-                        <div className="minibar-track">
-                          <div
-                            className="minibar-fill"
-                            style={{
-                              width: `${survPct}%`,
-                              background: ramp((v.surv / Math.max(65, maxSurv)) * 0.75 + 0.15)
-                            }}
-                          ></div>
+                      {isUncovered ? (
+                        <span style={{ color: 'var(--dim)', fontStyle: 'italic', fontSize: '0.8rem' }}>Not covered</span>
+                      ) : (
+                        <div className="minibar">
+                          <div className="minibar-track">
+                            <div
+                              className="minibar-fill"
+                              style={{
+                                width: `${survPct}%`,
+                                background: ramp((v.surv / Math.max(65, maxSurv)) * 0.75 + 0.15)
+                              }}
+                            ></div>
+                          </div>
+                          <span className="surv-num">{v.surv.toFixed(1)}%</span>
                         </div>
-                        <span className="surv-num">{v.surv.toFixed(1)}%</span>
-                      </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -880,8 +959,11 @@ export default function HomePage() {
             </tbody>
           </table>
         </div>
-        <p className="note">
-          Extraction is the share of first minute volume taken by wallets that sell within thirty minutes and hold nothing after. Lower is healthier.
+        <p className="note" style={{ marginBottom: 8 }}>
+          Extraction is the share of first minute volume taken by wallets that sell within thirty minutes and hold nothing after. Lower is healthier. Strict 7-day survival requires meeting liquidity (≥ $1,000 USD) and trade velocity (≥ 50 trades in 24h) thresholds.
+        </p>
+        <p className="disclosure-note" style={{ fontSize: '0.82rem', color: 'var(--dim)', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10, marginTop: 10 }}>
+          <b>Factual disclosure:</b> Modus launched a token on Pons.
         </p>
       </section>
 
@@ -1126,7 +1208,19 @@ export default function HomePage() {
       <footer>
         Live figures wired to the metrics engine snapshot shape.<br />
         This describes structural fit from historical data. It is not advice and not a prediction.<br />
-        A project of Modus Research Lab.
+        A project of Modus Research Lab. · <Link href="/verify" style={{ color: '#38bdf8', textDecoration: 'underline' }}>Verify Merkle Proofs Onchain</Link> · <Link href="/terms" style={{ color: '#38bdf8' }}>Terms of Service</Link> · <Link href="/privacy" style={{ color: '#38bdf8' }}>Privacy Policy</Link><br />
+        <span style={{ fontSize: '0.74rem', color: 'var(--dim)', fontFamily: 'monospace', display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+          <span>WaggleAttestor:</span>
+          <a
+            href={`https://robinhoodchain.blockscout.com/address/${WAGGLE_ATTESTOR_ADDRESS || '0x7fc7f477b12045cfefbde9e692812f64391b969b'}`}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: '#38bdf8', textDecoration: 'underline' }}
+          >
+            {WAGGLE_ATTESTOR_ADDRESS || '0x7fc7f477b12045cfefbde9e692812f64391b969b'}
+          </a>
+          <span>(Robinhood Chain 4663)</span>
+        </span>
       </footer>
     </div>
   );

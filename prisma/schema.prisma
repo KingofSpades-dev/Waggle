@@ -28,13 +28,19 @@ model Venue {
   chainId                String    @map("chain_id") @db.Uuid
   name                   String    @db.VarChar(64)
   key                    String    @unique @db.VarChar(32) // 'pump_fun', 'clanker'
+  venueType              String    @default("launchpad") @map("venue_type") @db.VarChar(32) // 'launchpad', 'pool'
+  status                 String    @default("active") @db.VarChar(32) // 'active', 'paused', 'inactive'
+  factoryAddress         String?   @map("factory_address") @db.VarChar(128)
+  firstSeenBlock         BigInt?   @map("first_seen_block")
+  identificationSource   String?   @map("identification_source") @db.VarChar(64)
   curveType              String    @map("curve_type") @db.VarChar(32) // 'bonding_curve', 'amm'
   feeStructure           Json?     @map("fee_structure")
   graduationThresholdUsd Decimal?  @map("graduation_threshold_usd") @db.Decimal(18, 2)
   createdAt              DateTime  @default(now()) @map("created_at")
 
-  chain    Chain    @relation(fields: [chainId], references: [id], onDelete: Cascade)
-  launches Launch[]
+  chain       Chain        @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  launches    Launch[]
+  launchPools LaunchPool[]
 
   @@map("venues")
 }
@@ -51,14 +57,32 @@ model Launch {
   launchHourUtc       Int      @map("launch_hour_utc") @db.SmallInt
   initialLiquidityUsd Decimal  @map("initial_liquidity_usd") @db.Decimal(18, 2)
 
-  chain     Chain            @relation(fields: [chainId], references: [id])
-  venue     Venue            @relation(fields: [venueId], references: [id])
-  outcome   Outcome?
-  trades    TradeFirstHour[]
+  chain       Chain            @relation(fields: [chainId], references: [id])
+  venue       Venue            @relation(fields: [venueId], references: [id])
+  outcome     Outcome?
+  trades      TradeFirstHour[]
+  launchPools LaunchPool[]
 
+  @@unique([chainId, tokenAddress], name: "chain_token_unique")
   @@index([chainId, venueId, blockTimestamp(sort: Desc)])
   @@index([blockTimestamp(sort: Desc)])
   @@map("launches")
+}
+
+model LaunchPool {
+  id          String   @id @default(uuid()) @db.Uuid
+  launchId    String   @map("launch_id") @db.Uuid
+  poolAddress String   @map("pool_address") @db.VarChar(128)
+  venueId     String   @map("venue_id") @db.Uuid
+  poolType    String   @default("bonding_curve") @map("pool_type") @db.VarChar(32) // 'bonding_curve', 'amm'
+  isPrimary   Boolean  @default(true) @map("is_primary")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  launch Launch @relation(fields: [launchId], references: [id], onDelete: Cascade)
+  venue  Venue  @relation(fields: [venueId], references: [id])
+
+  @@unique([launchId, poolAddress])
+  @@map("launch_pools")
 }
 
 model TradeFirstHour {

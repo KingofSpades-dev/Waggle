@@ -15,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@openzeppelin/merkle-tree": "^1.0.8",
     "@prisma/client": "^7.10.0",
     "@types/node": "^26.6.1",
     "@types/pg": "^8.23.1",
@@ -26,6 +27,11 @@
     "prisma": "^8.0.0-rc.15",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "viem": "^2.56.9"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1",
+    "vitest": "^5.0.1"
   }
 }

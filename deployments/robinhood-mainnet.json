@@ -1,0 +1,12 @@
+{
+  "network": "Robinhood Chain Mainnet",
+  "chainId": 4663,
+  "contractName": "WaggleAttestor",
+  "contractAddress": "0x7fc7f477b12045cfefbde9e692812f64391b969b",
+  "deployer": "0xcdc52c6c98ee5775d1d6faee5f7f8329d1e1ac8a",
+  "txHash": "0xd3de1cf33fbf31c76f32aceba71b6ab35f8e53997a39070185a8d1b5466c4b1d",
+  "blockNumber": 72088517,
+  "deployedAt": "2026-09-25T08:35:44.926Z",
+  "explorerContractUrl": "https://robinhoodchain.blockscout.com/address/0x7fc7f477b12045cfefbde9e692812f64391b969b",
+  "explorerTxUrl": "https://robinhoodchain.blockscout.com/tx/0xd3de1cf33fbf31c76f32aceba71b6ab35f8e53997a39070185a8d1b5466c4b1d"
+}

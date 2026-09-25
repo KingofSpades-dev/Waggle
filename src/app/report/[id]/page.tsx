@@ -1,8 +1,11 @@
-import React from 'react';
+import Link from 'next/link';
+import { ShieldCheck, ExternalLink, FileCode } from 'lucide-react';
+import { WAGGLE_ATTESTOR_ADDRESS } from '@/lib/viemClient';
 import { scoutProject } from '@/lib/scorer';
 import { CHAINS } from '@/lib/mockData';
 import { ChainLogo } from '@/components/ChainLogo';
 import { VenueLogo } from '@/components/VenueLogo';
+import { AlternativeLaunchpad } from '@/lib/types';
 
 export default async function ReportPermalinkPage({
   params,
@@ -16,14 +19,38 @@ export default async function ReportPermalinkPage({
     description: "An autonomous trading agent that rebalances onchain positions for DeFi users."
   });
 
+  const rawSnapshotId = Number(report.version_metadata?.snapshot_id);
+  const evaluatedSnapshotId = Number.isFinite(rawSnapshotId) && rawSnapshotId > 0
+    ? Math.floor(rawSnapshotId)
+    : 101;
+  const anchoredSnapshotId = evaluatedSnapshotId + 1;
+
   return (
     <div className="wrap">
       <section className="hero">
         <div className="eyebrow">reproducible report permalink</div>
-        <div className="livebar" style={{ marginBottom: 10 }}>
+        <div className="livebar" style={{ marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
           <span className="pill">Permalink ID: {id}</span>
           <span>·</span>
-          <span>Snapshot ID: <code>{report.version_metadata.snapshot_id}</code></span>
+          <span>Evaluated Snapshot: <strong style={{ color: 'var(--navy-900)' }}>#{evaluatedSnapshotId}</strong></span>
+          <span>·</span>
+          <span>Anchored Snapshot: <strong style={{ color: '#059669' }}>#{anchoredSnapshotId}</strong></span>
+          <span>·</span>
+          <Link
+            href={`/verify?snapshot_id=${anchoredSnapshotId}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: '0.72rem',
+              color: '#2563eb',
+              textDecoration: 'none',
+              fontWeight: 700
+            }}
+          >
+            <ShieldCheck size={13} />
+            <span>Verify Receipt Onchain ↗</span>
+          </Link>
         </div>
 
         <div className="report on" style={{ display: 'block', marginTop: 20 }}>

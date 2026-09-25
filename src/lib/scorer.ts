@@ -187,20 +187,23 @@ function findMatchingChain(chainKey: string | undefined, dbChains: DbChain[]): D
 }
 
 function findMatchingVenue(venueKey: string | undefined, chainKey: string, dbVenues: DbVenue[]): DbVenue {
+  const coveredVenues = dbVenues.filter(v => v.isCovered !== false && (v.sampleSize ?? v.launchesCount) > 0 && v.status !== 'paused');
+  const pool = coveredVenues.length > 0 ? coveredVenues : dbVenues;
+
   if (!venueKey) {
-    return dbVenues.find(v => v.chainKey === chainKey) || dbVenues[0];
+    return pool.find(v => v.chainKey === chainKey) || dbVenues.find(v => v.chainKey === chainKey) || dbVenues[0];
   }
   const vk = venueKey.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-  let found = dbVenues.find(v => {
+  let found = pool.find(v => {
     const dbVk = v.key.toLowerCase().replace(/[^a-z0-9]/g, '');
     return dbVk === vk || dbVk.includes(vk) || vk.includes(dbVk);
   });
 
   if (!found) {
-    found = dbVenues.find(v => v.chainKey === chainKey);
+    found = pool.find(v => v.chainKey === chainKey);
   }
-  return found || dbVenues[0];
+  return found || dbVenues.find(v => v.chainKey === chainKey) || dbVenues[0];
 }
 
 function parseJsonFromLlmOutput(rawContent: string): any {
@@ -514,6 +517,11 @@ function evaluateWithQuantitativeEngine(
     const scoredVenues = chainVenues.map(v => {
       let score = 50;
 
+      // Penalize uncovered venues with 0 sample size or paused venues (TASK-2.2.3)
+      if (v.isCovered === false || (v.sampleSize !== undefined && v.sampleSize === 0) || v.status === 'paused' || v.status === 'inactive') {
+        score -= 100;
+      }
+
       // Fit curve type to project economics
       if (features.isSmallTreasury || features.isZeroAudience) {
         if (v.curveType.includes('bonding')) {
@@ -529,10 +537,10 @@ function evaluateWithQuantitativeEngine(
 
       // Archetype venue resonance
       if (features.primaryCategory === 'agent' && v.key === 'virtuals') score += 45;
-      if (features.primaryCategory === 'meme' && (v.key === 'pump' || v.key === 'fourmeme')) score += 45;
-      if (features.primaryCategory === 'defi' && (v.key === 'aerodrome' || v.key === 'raydium' || v.key === 'astrovault')) score += 32;
-      if (features.primaryCategory === 'rwa' && (v.key === 'rh_settle' || v.key === 'astrovault')) score += 45;
-      if (features.primaryCategory === 'game' && (v.key === 'fourmeme' || v.key === 'pancakeswap')) score += 40;
+      if (features.primaryCategory === 'meme' && (v.key === 'hood_fun' || v.key === 'pons')) score += 40;
+      if (features.primaryCategory === 'defi' && (v.key === 'aerodrome' || v.key === 'raydium' || v.key === 'astrovault' || v.key === 'pools_trade')) score += 32;
+      if (features.primaryCategory === 'rwa' && (v.key === 'pons' || v.key === 'astrovault')) score += 45;
+      if (features.primaryCategory === 'game' && (v.key === 'pancakeswap' || v.key === 'hood_fun')) score += 40;
 
       // Adjust with live PostgreSQL venue metrics
       score += (v.survivalRatePct - 40) * 0.4;
@@ -611,12 +619,12 @@ function evaluateWithQuantitativeEngine(
     }
   } else if (top.chain.key === 'sol') {
     readAs = `${projectTitle} ("${descExcerpt}") captures maximum liquidity momentum on Solana (${top.chainFit}% fit), where transaction speed and rapid token discovery are highest. Given ${audienceNote}, immediate execution speed and low friction outweigh slower institutional validation.`;
-    fitReason = `Pump.fun eliminates upfront capital requirements, deploying a deterministic bonding curve that insulates ${projectTitle} from initial DEX LP drain while tapping into Solana's peak retail volume.`;
-    mechanicsSummary = `Zero upfront liquidity required with deterministic price curve until $69k market cap, migrating automatically into Raydium CPMM once the bonding curve completes.`;
+    fitReason = `${top.topVenue.name} provides automated liquidity pool deployment, protecting ${projectTitle} with verified onchain liquidity.`;
+    mechanicsSummary = `CPMM / DLMM automated liquidity pools on Solana with direct DEX pool integration.`;
   } else if (top.chain.key === 'bnb') {
     readAs = `${projectTitle} ("${descExcerpt}") aligns with BNB Smart Chain's active consumer trading ecosystem (${top.chainFit}% fit), capturing sustainable 7-day retention (${top.topVenue.survivalRatePct}% venue survival).`;
-    fitReason = `4meme provides BNB Chain's dedicated creator curve with minimal gas deployment overhead and seamless graduation into PancakeSwap deep liquidity pools.`;
-    mechanicsSummary = `Linear bonding curve on BNB Smart Chain with automatic PancakeSwap LP deployment and creator incentive rewards upon curve completion.`;
+    fitReason = `${top.topVenue.name} provides BNB Chain's dedicated deep liquidity pools with minimal gas deployment overhead and seamless routing.`;
+    mechanicsSummary = `Concentrated liquidity pools on BNB Smart Chain with active ecosystem trading volume.`;
   } else if (top.chain.key === 'rh') {
     readAs = `${projectTitle} ("${descExcerpt}") aligns with Robinhood Chain's regulated institutional infrastructure (${top.chainFit}% fit). The institutional orderbook eliminates retail MEV leakage, recording the lowest sniper extraction in the industry (${top.topVenue.extractionPct}%).`;
     fitReason = `Robinhood Settlement provides atomic off-chain orderbook matching with on-chain L2 batch settlement, ensuring regulatory alignment and asset-backed custody protection.`;

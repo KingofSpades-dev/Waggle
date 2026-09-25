@@ -59,31 +59,32 @@ export const CHAINS: ChainData[] = [
 ];
 
 export const VENUES: VenueData[] = [
-  // Solana (5 venues)
-  { name: "Pump.fun", chain: "sol", perday: 10400, liq: 4100, extract: 71, surv: 1.9 },
-  { name: "Bonk.fun", chain: "sol", perday: 2200, liq: 5600, extract: 64, surv: 2.6 },
-  { name: "Bags", chain: "sol", perday: 640, liq: 7300, extract: 58, surv: 3.4 },
-  { name: "Raydium CPMM", chain: "sol", perday: 3100, liq: 8500, extract: 42, surv: 4.8 },
-  { name: "Meteora DLMM", chain: "sol", perday: 1450, liq: 11200, extract: 34, surv: 5.6 },
+  // Solana (5 venues: Prototype samples uncovered per Brief 1.1)
+  { name: "Pump.fun", chain: "sol", perday: 0, liq: 0, extract: 0, surv: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0 },
+  { name: "Bonk.fun", chain: "sol", perday: 0, liq: 0, extract: 0, surv: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0 },
+  { name: "Bags", chain: "sol", perday: 0, liq: 0, extract: 0, surv: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0 },
+  { name: "Raydium CPMM", chain: "sol", perday: 3100, liq: 8500, extract: 42, surv: 4.8, venueType: 'pool', isCovered: true, sampleSize: 3100 },
+  { name: "Meteora DLMM", chain: "sol", perday: 1450, liq: 11200, extract: 34, surv: 5.6, venueType: 'pool', isCovered: true, sampleSize: 1450 },
 
   // Base (4 venues)
-  { name: "Clanker", chain: "base", perday: 880, liq: 9100, extract: 47, surv: 5.1 },
-  { name: "Virtuals Protocol", chain: "base", perday: 1940, liq: 12800, extract: 36, surv: 5.9 },
-  { name: "Zora Protocol", chain: "base", perday: 410, liq: 6800, extract: 39, surv: 4.2 },
-  { name: "Aerodrome SlipStream", chain: "base", perday: 2270, liq: 14500, extract: 31, surv: 6.4 },
+  { name: "Clanker", chain: "base", perday: 0, liq: 0, extract: 0, surv: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0 },
+  { name: "Virtuals Protocol", chain: "base", perday: 1940, liq: 12800, extract: 36, surv: 5.9, venueType: 'launchpad', isCovered: true, sampleSize: 1940 },
+  { name: "Zora Protocol", chain: "base", perday: 0, liq: 0, extract: 0, surv: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0 },
+  { name: "Aerodrome SlipStream", chain: "base", perday: 2270, liq: 14500, extract: 31, surv: 6.4, venueType: 'pool', isCovered: true, sampleSize: 2270 },
 
   // BNB Chain (2 venues)
-  { name: "Four.meme", chain: "bnb", perday: 1600, liq: 3900, extract: 69, surv: 2.4 },
-  { name: "PancakeSwap v3", chain: "bnb", perday: 1080, liq: 9600, extract: 44, surv: 4.5 },
+  { name: "Four.meme", chain: "bnb", perday: 0, liq: 0, extract: 0, surv: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0 },
+  { name: "PancakeSwap v3", chain: "bnb", perday: 1080, liq: 9600, extract: 44, surv: 4.5, venueType: 'pool', isCovered: true, sampleSize: 1080 },
 
-  // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)
-  { name: "Pons", chain: "rh", perday: 540, liq: 15600, extract: 28, surv: 6.7 },
-  { name: "Pools.trade", chain: "rh", perday: 420, liq: 14800, extract: 30, surv: 6.3 },
-  { name: "hood.fun", chain: "rh", perday: 850, liq: 6400, extract: 48, surv: 4.9 },
+  // Robinhood Chain (Pons · Pools.trade · hood.fun · Artemis)
+  { name: "Pons", chain: "rh", perday: 540, liq: 15600, extract: 28, surv: 6.7, venueType: 'launchpad', isCovered: true, sampleSize: 540 },
+  { name: "Pools.trade", chain: "rh", perday: 420, liq: 14800, extract: 30, surv: 6.3, venueType: 'launchpad', isCovered: true, sampleSize: 420 },
+  { name: "hood.fun", chain: "rh", perday: 850, liq: 6400, extract: 48, surv: 4.9, venueType: 'launchpad', isCovered: true, sampleSize: 850 },
+  { name: "Artemis Launcher", chain: "rh", perday: 180, liq: 18500, extract: 28.5, surv: 6.5, venueType: 'launchpad', isCovered: true, sampleSize: 180 },
 
   // Arc (2 venues)
-  { name: "ArcSwap", chain: "arc", perday: 310, liq: 8400, extract: 42, surv: 3.8 },
-  { name: "Astrovault 1:1 AXV", chain: "arc", perday: 260, liq: 6900, extract: 35, surv: 4.7 }
+  { name: "ArcSwap", chain: "arc", perday: 310, liq: 8400, extract: 42, surv: 3.8, venueType: 'pool', isCovered: true, sampleSize: 310 },
+  { name: "Astrovault 1:1 AXV", chain: "arc", perday: 260, liq: 6900, extract: 35, surv: 4.7, venueType: 'pool', isCovered: true, sampleSize: 260 }
 ];
 
 export const METRICS: Record<MetricType, MetricDefinition> = {

@@ -1,8 +1,19 @@
 import { Pool } from 'pg';
 
+export type StreamHealthStatus = 'ONLINE' | 'DEGRADED' | 'OFFLINE';
+
+export function computeStreamHealth(lastActivityMs: number, nowMs: number = Date.now()): StreamHealthStatus {
+  const elapsedMinutes = (nowMs - lastActivityMs) / (1000 * 60);
+  if (elapsedMinutes <= 10) return 'ONLINE';
+  if (elapsedMinutes <= 30) return 'DEGRADED';
+  return 'OFFLINE';
+}
+
 export interface StreamLogEntry {
   id: string;
   timestamp: string;
+  block_number?: number;
+  block_timestamp?: string;
   chain_key: 'sol' | 'base' | 'bnb' | 'rh' | 'arc';
   chain_name: string;
   event_type: 'POOL_DETECTED' | 'INGEST_DEX' | 'RPC_SLOT' | 'UPSERT_DB' | 'AMM_SYNC';
@@ -18,7 +29,9 @@ interface CollectorStatus {
   name: string;
   source: string;
   status: 'active' | 'syncing' | 'degraded';
+  health_status: StreamHealthStatus;
   latency_ms: number;
+  last_block_time?: string;
 }
 
 function formatTimestamp(d: Date): string {
@@ -36,6 +49,7 @@ class LiveStreamManager {
   private isInitialized = false;
   private poolCache: Record<string, any[]> = {};
   private lastFetchTime = 0;
+  private lastEventTime = Date.now();
 
   constructor() {
     this.initInitialLogs();
@@ -51,7 +65,7 @@ class LiveStreamManager {
         chain_key: 'base',
         chain_name: 'Base',
         event_type: 'POOL_DETECTED',
-        venue_name: 'Clanker / Aerodrome',
+        venue_name: 'Aerodrome SlipStream',
         token_address: '0x4hTkbm2UUD1U5cxWW6TKn4wsAWm8aTFTgK9gxrmW7unt',
         liquidity_usd: 1420.50,
         message: 'New ERC-20 pair initialized from factory',
@@ -71,10 +85,10 @@ class LiveStreamManager {
         chain_key: 'sol',
         chain_name: 'Solana',
         event_type: 'POOL_DETECTED',
-        venue_name: 'pump.fun',
+        venue_name: 'Raydium CPMM',
         token_address: 'HyzcrEVjdjWVAStMPRZkjfFqq7DJkkCDKJdr6uoZSKKW',
         liquidity_usd: 3105.96,
-        message: 'Bonding curve initialization verified onchain',
+        message: 'Liquidity pool initialization verified onchain',
         latency_ms: 59
       },
       {
@@ -82,18 +96,29 @@ class LiveStreamManager {
         chain_key: 'bnb',
         chain_name: 'BNB Chain',
         event_type: 'INGEST_DEX',
-        venue_name: 'Four.meme',
+        venue_name: 'PancakeSwap v3',
         token_address: '0x3289bca9712a4b87f918bc2891fa98a2489c719a',
         liquidity_usd: 5400.00,
-        message: 'Binance Smart Chain meme factory pair detected',
+        message: 'Binance Smart Chain liquidity pool pair detected',
         latency_ms: 96
       },
       {
         id: 'init-5',
+        chain_key: 'rh',
+        chain_name: 'Robinhood',
+        event_type: 'POOL_DETECTED',
+        venue_name: 'Pons',
+        token_address: '0x992819a8f02931bc78921af782c91823791abcf',
+        liquidity_usd: 15600.00,
+        message: 'Robinhood L2 liquidity pool registered',
+        latency_ms: 68
+      },
+      {
+        id: 'init-6',
         chain_key: 'arc',
         chain_name: 'Arc',
         event_type: 'AMM_SYNC',
-        venue_name: 'ArcSwap',
+        venue_name: 'Astrovault 1:1 AXV',
         token_address: 'arc19x8f02931bc78921af782c91823791abcf',
         liquidity_usd: 890.15,
         message: 'DexScreener price discovery channel updated',
@@ -237,16 +262,18 @@ class LiveStreamManager {
         // Real-time RPC slot or AMM sync event
         const rpcTemplates: Record<string, { type: StreamLogEntry['event_type']; venue: string; msg: string; latency: number }> = {
           sol: { type: 'RPC_SLOT', venue: 'Helius RPC', msg: `Slot #${312892000 + Math.floor(Math.random() * 1500)} confirmed · 0 dropped txs`, latency: 46 },
-          base: { type: 'INGEST_DEX', venue: 'Clanker', msg: `Batch block sync #${23190000 + Math.floor(Math.random() * 9000)} · Gas: 0.001 Gwei`, latency: 79 },
-          bnb: { type: 'POOL_DETECTED', venue: 'Four.meme', msg: 'Binance Smart Chain bonding curve tick updated', latency: 102 },
-          rh: { type: 'AMM_SYNC', venue: 'Robinhood Gateway', msg: 'L2 state settlement synced to Waggle DB snapshot', latency: 88 },
-          arc: { type: 'UPSERT_DB', venue: 'ArcSwap', msg: 'DexScreener price discovery channel indexed to cluster', latency: 118 }
+          base: { type: 'INGEST_DEX', venue: 'Aerodrome SlipStream', msg: `Batch block sync #${23190000 + Math.floor(Math.random() * 9000)} · Gas: 0.001 Gwei`, latency: 79 },
+          bnb: { type: 'POOL_DETECTED', venue: 'PancakeSwap v3', msg: 'Binance Smart Chain liquidity pool tick updated', latency: 102 },
+          rh: { type: 'AMM_SYNC', venue: 'Pons', msg: 'L2 state settlement synced to Waggle DB snapshot', latency: 88 },
+          arc: { type: 'UPSERT_DB', venue: 'Astrovault 1:1 AXV', msg: 'DexScreener price discovery channel indexed to cluster', latency: 118 }
         };
 
         const tmpl = rpcTemplates[chain];
         newEntry = {
           id: `live-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           timestamp: timeStr,
+          block_number: 10000000 + Math.floor(Math.random() * 500000),
+          block_timestamp: now.toISOString(),
           chain_key: chain,
           chain_name: chain === 'sol' ? 'Solana' : (chain === 'base' ? 'Base' : (chain === 'bnb' ? 'BNB Chain' : (chain === 'rh' ? 'Robinhood' : 'Arc'))),
           event_type: tmpl.type,
@@ -257,6 +284,7 @@ class LiveStreamManager {
       }
 
       if (newEntry) {
+        this.lastEventTime = Date.now();
         this.events.push(newEntry);
         if (this.events.length > 80) {
           this.events.shift();
@@ -268,17 +296,22 @@ class LiveStreamManager {
   }
 
   public getSnapshot() {
+    const health = computeStreamHealth(this.lastEventTime);
+    const nowIso = new Date().toISOString();
+
     return {
       total_launches: this.totalLaunches,
+      health_status: health,
+      last_activity_time: new Date(this.lastEventTime).toISOString(),
       events: [...this.events].reverse(), // newest first
       collectors: [
-        { key: 'sol', name: 'Solana', source: 'Helius RPC / GeckoTerminal', status: 'active', latency_ms: 48 },
-        { key: 'base', name: 'Base', source: 'Alchemy / DexScreener', status: 'active', latency_ms: 78 },
-        { key: 'bnb', name: 'BNB Chain', source: 'BSC RPC / GeckoTerminal', status: 'active', latency_ms: 95 },
-        { key: 'rh', name: 'Robinhood', source: 'Robinhood Gateway / AMM', status: 'active', latency_ms: 88 },
-        { key: 'arc', name: 'Arc', source: 'Arc RPC / DexScreener', status: 'active', latency_ms: 118 },
+        { key: 'sol', name: 'Solana', source: 'Helius RPC / GeckoTerminal', status: 'active', health_status: health, latency_ms: 48, last_block_time: nowIso },
+        { key: 'base', name: 'Base', source: 'Alchemy / DexScreener', status: 'active', health_status: health, latency_ms: 78, last_block_time: nowIso },
+        { key: 'bnb', name: 'BNB Chain', source: 'BSC RPC / GeckoTerminal', status: 'active', health_status: health, latency_ms: 95, last_block_time: nowIso },
+        { key: 'rh', name: 'Robinhood', source: 'Robinhood Gateway / AMM', status: 'active', health_status: health, latency_ms: 88, last_block_time: nowIso },
+        { key: 'arc', name: 'Arc', source: 'Arc RPC / DexScreener', status: 'active', health_status: health, latency_ms: 118, last_block_time: nowIso },
       ] as CollectorStatus[],
-      timestamp: new Date().toISOString()
+      timestamp: nowIso
     };
   }
 }

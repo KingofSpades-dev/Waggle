@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import WalletConnectModal from '@/components/WalletConnectModal';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -46,19 +47,30 @@ export default function Navbar() {
           <Link href="/coverage" className={isCoverage ? 'active' : ''}>
             coverage
           </Link>
+          <Link href="/robinhood" className={pathname === '/robinhood' ? 'active' : ''}>
+            robinhood
+          </Link>
+          <Link href="/verify" className={pathname === '/verify' ? 'active' : ''}>
+            verify
+          </Link>
         </span>
 
-        {/* Mobile Hamburger Toggle Button */}
-        <button
-          className="hamburger-btn"
-          onClick={() => setMobileMenuOpen(prev => !prev)}
-          aria-label="Toggle Navigation Menu"
-          aria-expanded={mobileMenuOpen}
-        >
-          <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`}></span>
-          <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`}></span>
-          <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`}></span>
-        </button>
+        {/* RainbowKit / Web3 Wallet Connect */}
+        <div className="nav-wallet-wrap" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <WalletConnectModal />
+
+          {/* Mobile Hamburger Toggle Button */}
+          <button
+            className="hamburger-btn"
+            onClick={() => setMobileMenuOpen(prev => !prev)}
+            aria-label="Toggle Navigation Menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`}></span>
+            <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`}></span>
+            <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`}></span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer Menu */}
@@ -97,6 +109,20 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               <span className="m-icon">🌐</span> coverage
+            </Link>
+            <Link
+              href="/robinhood"
+              className={pathname === '/robinhood' ? 'active' : ''}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="m-icon">🏹</span> robinhood
+            </Link>
+            <Link
+              href="/verify"
+              className={pathname === '/verify' ? 'active' : ''}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="m-icon">🛡️</span> verify
             </Link>
           </div>
         </div>

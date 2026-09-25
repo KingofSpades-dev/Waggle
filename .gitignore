@@ -35,3 +35,6 @@ next-env.d.ts
 
 # data export
 /data_export/
+
+# documentation / local specs
+/docs/

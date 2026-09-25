@@ -21,6 +21,10 @@ export interface DbVenue {
   survivalRatePct: number;
   avgInitialLiquidityUsd: number;
   extractionPct: number;
+  venueType?: 'launchpad' | 'pool';
+  isCovered?: boolean;
+  sampleSize?: number;
+  status?: string;
 }
 
 export interface MatrixResponse {
@@ -85,39 +89,40 @@ export function generateChainHourlyData(ck: string) {
  */
 function getFallbackDatabaseMetrics(): MatrixResponse {
   const chains: DbChain[] = [
-    { id: 'chain-sol', key: 'sol', name: 'Solana', hue: '#14F195', dataSources: ['pump.fun', 'Raydium'], launchesCount: 8420, survivalRate: 0.54, conf: 'high' },
+    { id: 'chain-sol', key: 'sol', name: 'Solana', hue: '#14F195', dataSources: ['pump.fun', 'Raydium'], launchesCount: 4750, survivalRate: 0.54, conf: 'high' },
     { id: 'chain-base', key: 'base', name: 'Base', hue: '#0052FF', dataSources: ['Virtuals', 'Uniswap v3', 'Aerodrome'], launchesCount: 4210, survivalRate: 0.48, conf: 'high' },
-    { id: 'chain-bnb', key: 'bnb', name: 'BNB Chain', hue: '#F3BA2F', dataSources: ['Four.meme', 'PancakeSwap'], launchesCount: 3180, survivalRate: 0.39, conf: 'high' },
-    { id: 'chain-rh', key: 'rh', name: 'Robinhood Chain', hue: '#00C805', dataSources: ['Robinhood L2 Settlement', 'RH Orderbook'], launchesCount: 1240, survivalRate: 0.62, conf: 'mid' },
-    { id: 'chain-arc', key: 'arc', name: 'Archway', hue: '#FF4D00', dataSources: ['Astrovault', 'Osmosis'], launchesCount: 890, survivalRate: 0.44, conf: 'mid' }
+    { id: 'chain-bnb', key: 'bnb', name: 'BNB Chain', hue: '#F3BA2F', dataSources: ['Four.meme', 'PancakeSwap'], launchesCount: 1080, survivalRate: 0.39, conf: 'high' },
+    { id: 'chain-rh', key: 'rh', name: 'Robinhood Chain', hue: '#00C805', dataSources: ['Robinhood L2 Settlement', 'RH Orderbook'], launchesCount: 1810, survivalRate: 0.62, conf: 'mid' },
+    { id: 'chain-arc', key: 'arc', name: 'Archway', hue: '#FF4D00', dataSources: ['Astrovault', 'Osmosis'], launchesCount: 570, survivalRate: 0.44, conf: 'mid' }
   ];
 
   const venues: DbVenue[] = [
-    // Solana (5 venues)
-    { id: 'ven-pump', name: 'Pump.fun', key: 'pump_fun', chainKey: 'sol', curveType: 'linear_bonding', launchesCount: 5120, survivalRatePct: 48.2, avgInitialLiquidityUsd: 4200, extractionPct: 34.5 },
-    { id: 'ven-bonk', name: 'Bonk.fun', key: 'bonk_fun', chainKey: 'sol', curveType: 'linear_bonding', launchesCount: 2200, survivalRatePct: 52.4, avgInitialLiquidityUsd: 5600, extractionPct: 31.8 },
-    { id: 'ven-bags', name: 'Bags', key: 'bags', chainKey: 'sol', curveType: 'social_bonding', launchesCount: 640, survivalRatePct: 54.1, avgInitialLiquidityUsd: 7300, extractionPct: 29.5 },
-    { id: 'ven-raydium', name: 'Raydium CPMM', key: 'raydium', chainKey: 'sol', curveType: 'cpmm_amm', launchesCount: 3300, survivalRatePct: 58.1, avgInitialLiquidityUsd: 8500, extractionPct: 28.2 },
-    { id: 'ven-meteora', name: 'Meteora DLMM', key: 'meteora', chainKey: 'sol', curveType: 'concentrated_amm', launchesCount: 1450, survivalRatePct: 61.3, avgInitialLiquidityUsd: 11200, extractionPct: 24.1 },
+    // Solana (5 venues - 3 uncovered venues zeroed out with sampleSize 0)
+    { id: 'ven-pump', name: 'Pump.fun', key: 'pump_fun', chainKey: 'sol', curveType: 'linear_bonding', launchesCount: 0, survivalRatePct: 0, avgInitialLiquidityUsd: 0, extractionPct: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0, status: 'uncovered' },
+    { id: 'ven-bonk', name: 'Bonk.fun', key: 'bonk_fun', chainKey: 'sol', curveType: 'linear_bonding', launchesCount: 0, survivalRatePct: 0, avgInitialLiquidityUsd: 0, extractionPct: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0, status: 'uncovered' },
+    { id: 'ven-bags', name: 'Bags', key: 'bags', chainKey: 'sol', curveType: 'social_bonding', launchesCount: 0, survivalRatePct: 0, avgInitialLiquidityUsd: 0, extractionPct: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0, status: 'uncovered' },
+    { id: 'ven-raydium', name: 'Raydium CPMM', key: 'raydium', chainKey: 'sol', curveType: 'cpmm_amm', launchesCount: 3300, survivalRatePct: 58.1, avgInitialLiquidityUsd: 8500, extractionPct: 28.2, venueType: 'pool', isCovered: true, sampleSize: 3300, status: 'active' },
+    { id: 'ven-meteora', name: 'Meteora DLMM', key: 'meteora', chainKey: 'sol', curveType: 'concentrated_amm', launchesCount: 1450, survivalRatePct: 61.3, avgInitialLiquidityUsd: 11200, extractionPct: 24.1, venueType: 'pool', isCovered: true, sampleSize: 1450, status: 'active' },
 
-    // Base (4 venues)
-    { id: 'ven-clanker', name: 'Clanker', key: 'clanker', chainKey: 'base', curveType: 'bonding_curve', launchesCount: 880, survivalRatePct: 55.2, avgInitialLiquidityUsd: 9100, extractionPct: 32.4 },
-    { id: 'ven-virtuals', name: 'Virtuals Protocol', key: 'virtuals', chainKey: 'base', curveType: 'agent_bonding', launchesCount: 1940, survivalRatePct: 56.4, avgInitialLiquidityUsd: 12800, extractionPct: 31.0 },
-    { id: 'ven-zora', name: 'Zora Protocol', key: 'zora', chainKey: 'base', curveType: 'bonding_curve', launchesCount: 410, survivalRatePct: 51.6, avgInitialLiquidityUsd: 6800, extractionPct: 33.2 },
-    { id: 'ven-aerodrome', name: 'Aerodrome SlipStream', key: 'aerodrome', chainKey: 'base', curveType: 'concentrated_amm', launchesCount: 2270, survivalRatePct: 64.8, avgInitialLiquidityUsd: 14500, extractionPct: 22.4 },
+    // Base (4 venues - 2 uncovered venues zeroed out with sampleSize 0)
+    { id: 'ven-clanker', name: 'Clanker', key: 'clanker', chainKey: 'base', curveType: 'bonding_curve', launchesCount: 0, survivalRatePct: 0, avgInitialLiquidityUsd: 0, extractionPct: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0, status: 'uncovered' },
+    { id: 'ven-virtuals', name: 'Virtuals Protocol', key: 'virtuals', chainKey: 'base', curveType: 'agent_bonding', launchesCount: 1940, survivalRatePct: 56.4, avgInitialLiquidityUsd: 12800, extractionPct: 31.0, venueType: 'launchpad', isCovered: true, sampleSize: 1940, status: 'active' },
+    { id: 'ven-zora', name: 'Zora Protocol', key: 'zora', chainKey: 'base', curveType: 'bonding_curve', launchesCount: 0, survivalRatePct: 0, avgInitialLiquidityUsd: 0, extractionPct: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0, status: 'uncovered' },
+    { id: 'ven-aerodrome', name: 'Aerodrome SlipStream', key: 'aerodrome', chainKey: 'base', curveType: 'concentrated_amm', launchesCount: 2270, survivalRatePct: 64.8, avgInitialLiquidityUsd: 14500, extractionPct: 22.4, venueType: 'pool', isCovered: true, sampleSize: 2270, status: 'active' },
 
-    // BNB Chain (2 venues)
-    { id: 'ven-fourmeme', name: 'Four.meme', key: 'four_meme', chainKey: 'bnb', curveType: 'linear_bonding', launchesCount: 2100, survivalRatePct: 41.2, avgInitialLiquidityUsd: 3900, extractionPct: 42.1 },
-    { id: 'ven-pancake', name: 'PancakeSwap v3', key: 'pancakeswap', chainKey: 'bnb', curveType: 'cpmm_amm', launchesCount: 1080, survivalRatePct: 52.5, avgInitialLiquidityUsd: 9600, extractionPct: 31.8 },
+    // BNB Chain (2 venues - 1 uncovered venue zeroed out with sampleSize 0)
+    { id: 'ven-fourmeme', name: 'Four.meme', key: 'four_meme', chainKey: 'bnb', curveType: 'linear_bonding', launchesCount: 0, survivalRatePct: 0, avgInitialLiquidityUsd: 0, extractionPct: 0, venueType: 'launchpad', isCovered: false, sampleSize: 0, status: 'uncovered' },
+    { id: 'ven-pancake', name: 'PancakeSwap v3', key: 'pancakeswap', chainKey: 'bnb', curveType: 'cpmm_amm', launchesCount: 1080, survivalRatePct: 52.5, avgInitialLiquidityUsd: 9600, extractionPct: 31.8, venueType: 'pool', isCovered: true, sampleSize: 1080, status: 'active' },
 
-    // Robinhood Chain (Exact 3 venues: Pons · Pools.trade · hood.fun)
-    { id: 'ven-pons', name: 'Pons', key: 'pons', chainKey: 'rh', curveType: 'direct_liquidity', launchesCount: 540, survivalRatePct: 67.0, avgInitialLiquidityUsd: 15600, extractionPct: 28.0 },
-    { id: 'ven-pools-trade', name: 'Pools.trade', key: 'pools_trade', chainKey: 'rh', curveType: 'direct_liquidity', launchesCount: 420, survivalRatePct: 63.0, avgInitialLiquidityUsd: 14800, extractionPct: 30.0 },
-    { id: 'ven-hood-fun', name: 'hood.fun', key: 'hood_fun', chainKey: 'rh', curveType: 'bonding_curve', launchesCount: 850, survivalRatePct: 49.0, avgInitialLiquidityUsd: 6400, extractionPct: 48.0 },
+    // Robinhood Chain (Pons · Pools.trade · hood.fun · Artemis)
+    { id: 'ven-pons', name: 'Pons', key: 'pons', chainKey: 'rh', curveType: 'direct_liquidity', launchesCount: 540, survivalRatePct: 67.0, avgInitialLiquidityUsd: 15600, extractionPct: 28.0, venueType: 'launchpad', isCovered: true, sampleSize: 540, status: 'active' },
+    { id: 'ven-pools-trade', name: 'Pools.trade', key: 'pools_trade', chainKey: 'rh', curveType: 'direct_liquidity', launchesCount: 420, survivalRatePct: 63.0, avgInitialLiquidityUsd: 14800, extractionPct: 30.0, venueType: 'launchpad', isCovered: true, sampleSize: 420, status: 'active' },
+    { id: 'ven-hood-fun', name: 'hood.fun', key: 'hood_fun', chainKey: 'rh', curveType: 'bonding_curve', launchesCount: 850, survivalRatePct: 49.0, avgInitialLiquidityUsd: 6400, extractionPct: 48.0, venueType: 'launchpad', isCovered: true, sampleSize: 850, status: 'active' },
+    { id: 'ven-artemis', name: 'Artemis Launcher', key: 'artemis', chainKey: 'rh', curveType: 'atomic_launch', launchesCount: 180, survivalRatePct: 65.4, avgInitialLiquidityUsd: 18500, extractionPct: 28.5, venueType: 'launchpad', isCovered: true, sampleSize: 180, status: 'active' },
 
     // Arc (2 venues)
-    { id: 'ven-arc-swap', name: 'ArcSwap', key: 'arc_swap', chainKey: 'arc', curveType: 'amm', launchesCount: 310, survivalRatePct: 51.0, avgInitialLiquidityUsd: 8400, extractionPct: 33.0 },
-    { id: 'ven-astrovault', name: 'Astrovault 1:1 AXV', key: 'astrovault', chainKey: 'arc', curveType: 'hybrid_stable_curve', launchesCount: 890, survivalRatePct: 54.0, avgInitialLiquidityUsd: 6900, extractionPct: 29.0 }
+    { id: 'ven-arc-swap', name: 'ArcSwap', key: 'arc_swap', chainKey: 'arc', curveType: 'amm', launchesCount: 310, survivalRatePct: 51.0, avgInitialLiquidityUsd: 8400, extractionPct: 33.0, venueType: 'pool', isCovered: true, sampleSize: 310, status: 'active' },
+    { id: 'ven-astrovault', name: 'Astrovault 1:1 AXV', key: 'astrovault', chainKey: 'arc', curveType: 'hybrid_stable_curve', launchesCount: 260, survivalRatePct: 54.0, avgInitialLiquidityUsd: 6900, extractionPct: 29.0, venueType: 'pool', isCovered: true, sampleSize: 260, status: 'active' }
   ];
 
   const matrixData: Record<string, Record<string, (number | null)[]>> = {};
@@ -143,6 +148,8 @@ let cachedMetricsResponse: MatrixResponse | null = null;
 let lastCachedMetricsTime = 0;
 const CIRCUIT_BREAKER_COOLDOWN_MS = 60000; // 60s cooldown when DB is unavailable or quota reached
 const CACHE_TTL_MS = 5000; // 5s cache to avoid excessive DB queries
+
+const UNCOVERED_VENUE_KEYS = new Set(['pump_fun', 'bonk_fun', 'bags', 'clanker', 'zora', 'four_meme']);
 
 /**
  * Gets live matrix data computed directly from PostgreSQL DB tables.
@@ -210,7 +217,7 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
 
     // 2. Fetch Venues
     const venuesRes = await client.query(`
-      SELECT v.id, v.name, v.key, v.curve_type, c.key as chain_key,
+      SELECT v.id, v.name, v.key, v.curve_type, v.venue_type, v.status, c.key as chain_key,
              COUNT(DISTINCT l.id) as launches_count,
              COALESCE(AVG(CASE WHEN o.id IS NOT NULL THEN (CASE WHEN o.is_surviving_7d THEN 100.0 ELSE 0.0 END) ELSE NULL END), 45.0) as survival_rate_pct,
              COALESCE(AVG(l.initial_liquidity_usd), 4500.0) as avg_liq_usd,
@@ -219,20 +226,28 @@ export async function getLiveDatabaseMetrics(): Promise<MatrixResponse> {
       JOIN chains c ON c.id = v.chain_id
       LEFT JOIN launches l ON l.venue_id = v.id
       LEFT JOIN outcomes o ON o.launch_id = l.id
-      GROUP BY v.id, v.name, v.key, v.curve_type, c.key;
+      GROUP BY v.id, v.name, v.key, v.curve_type, v.venue_type, v.status, c.key;
     `);
 
-    const venues: DbVenue[] = venuesRes.rows.map(r => ({
-      id: r.id,
-      name: r.name,
-      key: r.key,
-      chainKey: r.chain_key,
-      curveType: r.curve_type,
-      launchesCount: parseInt(r.launches_count || '0'),
-      survivalRatePct: parseFloat(parseFloat(r.survival_rate_pct || '45').toFixed(1)),
-      avgInitialLiquidityUsd: Math.round(parseFloat(r.avg_liq_usd || '4500')),
-      extractionPct: parseFloat(parseFloat(r.extraction_pct || '38').toFixed(1))
-    }));
+    const venues: DbVenue[] = venuesRes.rows.map(r => {
+      const isUncovered = UNCOVERED_VENUE_KEYS.has(r.key) || r.status === 'uncovered';
+      const rawCount = parseInt(r.launches_count || '0');
+      return {
+        id: r.id,
+        name: r.name,
+        key: r.key,
+        chainKey: r.chain_key,
+        curveType: r.curve_type,
+        venueType: (r.venue_type as 'launchpad' | 'pool') || 'launchpad',
+        isCovered: !isUncovered && rawCount > 0,
+        sampleSize: isUncovered ? 0 : rawCount,
+        status: isUncovered ? 'uncovered' : (r.status || 'active'),
+        launchesCount: isUncovered ? 0 : rawCount,
+        survivalRatePct: isUncovered ? 0 : parseFloat(parseFloat(r.survival_rate_pct || '45').toFixed(1)),
+        avgInitialLiquidityUsd: isUncovered ? 0 : Math.round(parseFloat(r.avg_liq_usd || '4500')),
+        extractionPct: isUncovered ? 0 : parseFloat(parseFloat(r.extraction_pct || '38').toFixed(1))
+      };
+    });
 
     // 3. Compute Hourly Matrix per Chain (24 Hours UTC)
     const hourlyRes = await client.query(`

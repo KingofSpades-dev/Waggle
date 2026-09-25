@@ -9,6 +9,8 @@ export interface ChainData {
   meta: Record<string, number> | null;
   isCovered: boolean;
 }
+export const MIN_SURVIVAL_LIQUIDITY_USD = 1000.0; // Named constant threshold: $1,000 USD
+export const MIN_SURVIVAL_TRADES_24H = 50;        // Named constant threshold: 50 trades in preceding 24h
 
 export interface VenueData {
   name: string;
@@ -17,6 +19,10 @@ export interface VenueData {
   liq: number;
   extract: number;
   surv: number;
+  venueType?: 'launchpad' | 'pool';
+  isCovered?: boolean;
+  sampleSize?: number;
+  status?: 'active' | 'paused' | 'inactive';
 }
 
 export type MetricType = 'survival' | 'launches' | 'extraction';
