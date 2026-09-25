@@ -7,7 +7,7 @@ import {
 } from "viem";
 
 export const ROBINHOOD_SAFE_MULTISIG: Address = (process.env.WAGGLE_SAFE_ADDRESS || "0xcdc52c6c98ee5775d1d6faee5f7f8329d1e1ac8a") as Address;
-export const ROBINHOOD_USDG_CONTRACT: Address = (process.env.ROBINHOOD_USDG_ADDRESS || "0x4663000000000000000000000000000000000002") as Address;
+export const ROBINHOOD_USDG_CONTRACT: Address = (process.env.ROBINHOOD_USDG_ADDRESS || "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168") as Address;
 export const REPORT_PRICE_USDG_ATOMIC = 5_000_000n; // 5.00 USDG (6 decimals)
 
 export interface TransferAuthorization {

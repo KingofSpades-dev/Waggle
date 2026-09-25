@@ -432,7 +432,7 @@ export default function VerifyPage() {
               </span>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--gray-50)', padding: '5px 8px', borderRadius: '5px', border: '1px solid var(--line)' }}>
                 <a
-                  href={`https://explorer.robinhood.com/address/${WAGGLE_ATTESTOR_ADDRESS}`}
+                  href={`https://robinhoodchain.blockscout.com/address/${WAGGLE_ATTESTOR_ADDRESS}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: '#2563eb', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', wordBreak: 'break-all', fontWeight: 600 }}
@@ -472,7 +472,7 @@ export default function VerifyPage() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid var(--line)', fontSize: '0.72rem' }}>
               <span style={{ color: 'var(--dim)' }}>Governance Owner:</span>
-              <span style={{ color: 'var(--navy-900)', fontWeight: 600 }}>Safe Multisig 3-of-5</span>
+              <span style={{ color: 'var(--navy-900)', fontWeight: 600 }}>0xcdc5...ac8a (Safe transition target)</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>

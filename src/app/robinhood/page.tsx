@@ -45,29 +45,7 @@ const ROBINHOOD_VENUES: RobinhoodVenue[] = [
     medianLiquidityUsd: 15600,
     extractionPct: 28.0,
     status: 'active',
-    attributedSharePct: 42.5,
-  },
-  {
-    name: 'Pools.trade',
-    key: 'pools_trade',
-    curveType: 'Concentrated Tick Liquidity',
-    surv7d: 63.0,
-    launchesPerDay: 420,
-    medianLiquidityUsd: 14800,
-    extractionPct: 30.0,
-    status: 'active',
-    attributedSharePct: 26.2,
-  },
-  {
-    name: 'hood.fun',
-    key: 'hood_fun',
-    curveType: 'Linear Bonding Curve',
-    surv7d: 49.0,
-    launchesPerDay: 850,
-    medianLiquidityUsd: 6400,
-    extractionPct: 48.0,
-    status: 'active',
-    attributedSharePct: 21.3,
+    attributedSharePct: 25.7,
   },
   {
     name: 'Artemis Launcher',
@@ -78,7 +56,29 @@ const ROBINHOOD_VENUES: RobinhoodVenue[] = [
     medianLiquidityUsd: 18500,
     extractionPct: 28.5,
     status: 'active',
-    attributedSharePct: 18.5,
+    attributedSharePct: 8.6,
+  },
+  {
+    name: 'Pools.trade',
+    key: 'pools_trade',
+    curveType: 'Concentrated Tick Liquidity',
+    surv7d: 63.0,
+    launchesPerDay: 420,
+    medianLiquidityUsd: 14800,
+    extractionPct: 30.0,
+    status: 'active',
+    attributedSharePct: 20.0,
+  },
+  {
+    name: 'hood.fun',
+    key: 'hood_fun',
+    curveType: 'Linear Bonding Curve',
+    surv7d: 49.0,
+    launchesPerDay: 850,
+    medianLiquidityUsd: 6400,
+    extractionPct: 48.0,
+    status: 'active',
+    attributedSharePct: 40.5,
   },
   {
     name: 'Noxa',
@@ -89,14 +89,14 @@ const ROBINHOOD_VENUES: RobinhoodVenue[] = [
     medianLiquidityUsd: 4200,
     extractionPct: 52.0,
     status: 'paused', // Noxa Paused (TASK-2.2.3)
-    attributedSharePct: 4.8,
+    attributedSharePct: 0.0,
   },
 ];
 
 export default function RobinhoodHubPage() {
   const [activeMetric, setActiveMetric] = useState<'survival' | 'launches' | 'extraction'>('survival');
   const [selectedHour, setSelectedHour] = useState<number>(16); // Peak hour 16 UTC default
-  const [l2BlockHeight, setL2BlockHeight] = useState<number>(67_920_183);
+  const [l2BlockHeight, setL2BlockHeight] = useState<number>(72_088_517);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -257,7 +257,7 @@ export default function RobinhoodHubPage() {
               <Activity size={14} style={{ color: 'var(--navy-800)' }} />
             </div>
             <div style={{ fontSize: '1.45rem', fontWeight: 800, marginTop: '2px', color: 'var(--navy-900)', fontFamily: 'monospace' }}>
-              1,810
+              1,990
             </div>
             <span style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 600 }}>+12.4% vs 7d avg</span>
           </div>
@@ -269,7 +269,7 @@ export default function RobinhoodHubPage() {
               <TrendingUp size={14} style={{ color: '#10b981' }} />
             </div>
             <div style={{ fontSize: '1.45rem', fontWeight: 800, marginTop: '2px', color: '#10b981', fontFamily: 'monospace' }}>
-              62.0%
+              61.1%
             </div>
             <span style={{ fontSize: '0.68rem', color: 'var(--dim)' }}>&ge;$1k Liq & &ge;50 Trades floor</span>
           </div>
@@ -353,7 +353,7 @@ export default function RobinhoodHubPage() {
             <tbody>
               {ROBINHOOD_VENUES.map((v, idx) => {
                 const isPaused = v.status === 'paused';
-                const rankBadges = ['🥇 #1', '🥈 #2', '🥉 #3', '4'];
+                const rankBadges = ['🥇 #1', '🥈 #2', '🥉 #3', '#4', '#5'];
 
                 return (
                   <tr key={v.key} style={isPaused ? { opacity: 0.6 } : undefined}>
@@ -679,7 +679,7 @@ export default function RobinhoodHubPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--gray-50)', padding: '5px 8px', borderRadius: '5px', border: '1px solid var(--line)' }}>
               <span style={{ color: 'var(--dim)' }}>ArbSys L2 Block:</span>
-              <span style={{ color: 'var(--navy-800)', fontWeight: 700 }}>#67,920,183</span>
+              <span style={{ color: 'var(--navy-800)', fontWeight: 700 }}>#72,088,517</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--gray-50)', padding: '5px 8px', borderRadius: '5px', border: '1px solid var(--line)' }}>
               <span style={{ color: 'var(--dim)' }}>Contract:</span>

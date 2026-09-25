@@ -34,7 +34,14 @@ export const SAFE_SINGLETON_ADDRESS = '0x41f6252d04d10604b855e25b741566168763b40
 export const SAFE_FACTORY_ADDRESS = '0x4e1dcdef7ed41d0f63b21114532b2e88a385f061' as const;
 export const WAGGLE_TREASURY_SAFE_ADDRESS = (process.env.WAGGLE_SAFE_ADDRESS || '0xcdc52c6c98ee5775d1d6faee5f7f8329d1e1ac8a') as `0x${string}`;
 
-export const WAGGLE_ATTESTOR_ADDRESS = (process.env.NEXT_PUBLIC_WAGGLE_ATTESTOR_ADDRESS || '0x7fc7f477b12045cfefbde9e692812f64391b969b') as `0x${string}`;
+export const CANONICAL_WAGGLE_ATTESTOR_ADDRESS = '0x7fc7f477b12045cfefbde9e692812f64391b969b' as const;
+
+export const WAGGLE_ATTESTOR_ADDRESS: `0x${string}` =
+  process.env.NEXT_PUBLIC_WAGGLE_ATTESTOR_ADDRESS &&
+  !process.env.NEXT_PUBLIC_WAGGLE_ATTESTOR_ADDRESS.toLowerCase().startsWith('0x4663') &&
+  !process.env.NEXT_PUBLIC_WAGGLE_ATTESTOR_ADDRESS.toLowerCase().startsWith('0x0000')
+    ? (process.env.NEXT_PUBLIC_WAGGLE_ATTESTOR_ADDRESS as `0x${string}`)
+    : CANONICAL_WAGGLE_ATTESTOR_ADDRESS;
 
 export const WAGGLE_ATTESTOR_ABI = [
   {

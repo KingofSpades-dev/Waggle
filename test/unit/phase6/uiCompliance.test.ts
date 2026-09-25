@@ -64,7 +64,7 @@ describe("FASE 6: UI Integration, Disclosures & Compliance Test Suite", () => {
       const homeSrc = readAppFile("src/app/page.tsx");
       expect(homeSrc).toContain("LAST ATTESTED BLOCK");
       expect(homeSrc).toContain("robinhoodchain.blockscout.com/block/");
-      expect(homeSrc).toContain("#67,920,183");
+      expect(homeSrc).toContain("#72,088,517");
     });
   });
 

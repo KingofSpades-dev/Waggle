@@ -263,7 +263,7 @@ export default function HomePage() {
               </span>
               <span>·</span>
               <a
-                href="https://robinhoodchain.blockscout.com/block/67920183"
+                href="https://robinhoodchain.blockscout.com/block/72088517"
                 target="_blank"
                 rel="noreferrer"
                 className="pill"
@@ -271,7 +271,7 @@ export default function HomePage() {
                 title="View latest verified attestation block on Robinhood Chain Blockscout"
               >
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                <span>LAST ATTESTED BLOCK <b>#67,920,183</b> ↗</span>
+                <span>LAST ATTESTED BLOCK <b>#72,088,517</b> ↗</span>
               </a>
               <span className="pill">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: 5 }}>
@@ -312,16 +312,18 @@ export default function HomePage() {
 
           <div className="hero-terminal-card">
             <div className="terminal-header">
-              <div className="terminal-dots">
-                <span className="dot red"></span>
-                <span className="dot yellow"></span>
-                <span className="dot green"></span>
-              </div>
-              <div className="terminal-title">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5">
-                  <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
-                </svg>
-                <span>scout_agent.live — Engine v2.6</span>
+              <div className="terminal-header-left">
+                <div className="terminal-dots">
+                  <span className="dot red"></span>
+                  <span className="dot yellow"></span>
+                  <span className="dot green"></span>
+                </div>
+                <div className="terminal-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+                    <path d="M12 2L21 7.2V16.8L12 22L3 16.8V7.2L12 2Z" />
+                  </svg>
+                  <span>scout_agent.live — Engine v2.6</span>
+                </div>
               </div>
               <div className="terminal-badge">
                 <span className="pulse-dot"></span>

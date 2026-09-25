@@ -22,9 +22,9 @@ contract DeployMainnet is Script {
 
         // Deploy with isArbitrumChain = true (enables ArbSys address(100) precompile)
         attestor = new WaggleAttestor(
-            true, // _isArbitrumChain: required for Chain 4663
             SAFE_MULTISIG,
-            KMS_PUBLISHER_SIGNER
+            KMS_PUBLISHER_SIGNER,
+            true // _isArbitrumChain: required for Chain 4663
         );
 
         vm.stopBroadcast();
