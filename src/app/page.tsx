@@ -283,7 +283,7 @@ export default function HomePage() {
 
             <div style={{ marginBottom: 14, marginTop: 4 }}>
               <a
-                href="https://robinhoodchain.blockscout.com/address/0x407ddd48f745916ac10a34feca21389938913af5"
+                href="https://axiom.trade/token/0x407ddd48f745916ac10a34feca21389938913af5?chain=robinhood&chains=robinhood&pulseChains=robinhood&trackerChains=robinhood&discoverChains=robinhood"
                 target="_blank"
                 rel="noreferrer"
                 style={{
@@ -300,7 +300,7 @@ export default function HomePage() {
                   fontWeight: 700,
                   textDecoration: 'none'
                 }}
-                title="View Waggle Contract Address on Robinhood Chain Blockscout"
+                title="View Waggle Token on Axiom Trade"
               >
                 <span style={{
                   fontSize: '0.66rem',
