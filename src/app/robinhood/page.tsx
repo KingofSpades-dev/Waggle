@@ -137,7 +137,7 @@ export default function RobinhoodHubPage() {
   const unknownSharePct = 5.2;
 
   return (
-    <main className="wrap" style={{ paddingTop: '8px', paddingBottom: '20px' }}>
+    <main className="wrap" style={{ paddingTop: '28px', paddingBottom: '32px' }}>
       
       {/* Top Breadcrumb & Live Chain Pill */}
       <div style={{
@@ -146,9 +146,11 @@ export default function RobinhoodHubPage() {
         alignItems: 'center',
         fontSize: '0.78rem',
         color: 'var(--dim)',
-        marginBottom: '8px',
-        paddingBottom: '6px',
-        borderBottom: '1px solid var(--line)'
+        marginBottom: '18px',
+        paddingBottom: '10px',
+        borderBottom: '1px solid var(--line)',
+        flexWrap: 'wrap',
+        gap: '8px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link href="/" style={{ color: 'var(--dim)', textDecoration: 'none' }}>Waggle</Link>
@@ -700,7 +702,7 @@ export default function RobinhoodHubPage() {
       </section>
 
       {/* Robinhood Hub Footer with Disclosures */}
-      <footer style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid var(--line)', textAlign: 'center', fontSize: '0.78rem', color: 'var(--dim)' }}>
+      <footer style={{ marginTop: '56px', paddingTop: '24px', paddingBottom: '24px', borderTop: '1px solid var(--line)', textAlign: 'center', fontSize: '0.78rem', color: 'var(--dim)' }}>
         <p style={{ margin: '0 0 6px' }}>
           Robinhood Chain (Chain ID: 4663) · Arbitrum Nitro L2 Architecture · Settlement on Ethereum Mainnet
         </p>

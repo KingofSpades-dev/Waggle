@@ -174,7 +174,7 @@ export default function VerifyPage() {
   }, [snapshotId, venueKey, simulateForged]);
 
   return (
-    <main className="wrap" style={{ paddingTop: '8px', paddingBottom: '20px' }}>
+    <main className="wrap" style={{ paddingTop: '28px', paddingBottom: '32px' }}>
       
       {/* Top Breadcrumbs & Chain Badge */}
       <div style={{
@@ -183,98 +183,83 @@ export default function VerifyPage() {
         alignItems: 'center',
         fontSize: '0.78rem',
         color: 'var(--dim)',
-        marginBottom: '8px',
-        paddingBottom: '6px',
-        borderBottom: '1px solid var(--line)'
+        marginBottom: '18px',
+        paddingBottom: '10px',
+        borderBottom: '1px solid var(--line)',
+        flexWrap: 'wrap',
+        gap: '8px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link href="/" style={{ color: 'var(--dim)', textDecoration: 'none' }}>Waggle</Link>
           <span>/</span>
           <Link href="/robinhood" style={{ color: 'var(--navy-800)', textDecoration: 'none', fontWeight: 600 }}>Robinhood Chain Hub</Link>
           <span>/</span>
-          <span style={{ color: 'var(--navy-900)', fontFamily: 'monospace', fontWeight: 700 }}>verify-engine</span>
+          <span style={{ color: 'var(--navy-900)', fontFamily: 'monospace', fontWeight: 750 }}>verify-engine</span>
         </div>
 
-        <span className="conf" style={{
-          fontSize: '0.72rem',
-          padding: '2px 8px',
-          background: 'var(--panel)',
-          border: '1px solid var(--line)',
-          color: 'var(--navy-900)',
-          fontFamily: 'monospace'
-        }}>
-          Chain ID: {ROBINHOOD_CHAIN_ID} (Robinhood)
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            fontSize: '0.72rem',
+            padding: '2px 8px',
+            background: 'var(--panel)',
+            border: '1px solid var(--line)',
+            borderRadius: '6px',
+            color: 'var(--navy-900)',
+            fontFamily: 'monospace',
+            fontWeight: 600
+          }}>
+            Chain ID: {ROBINHOOD_CHAIN_ID} (Robinhood)
+          </span>
+          <span style={{
+            fontSize: '0.72rem',
+            padding: '2px 8px',
+            background: 'rgba(16, 185, 129, 0.08)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            borderRadius: '6px',
+            color: '#059669',
+            fontFamily: 'monospace',
+            fontWeight: 700
+          }}>
+            Block #72,088,517
+          </span>
+        </div>
       </div>
 
       {/* Hero Title Section */}
-      <section style={{ marginBottom: '10px' }}>
-        <div className="eyebrow" style={{ color: 'var(--navy-800)', marginBottom: '1px' }}>
+      <section style={{ marginBottom: '14px' }}>
+        <div className="eyebrow" style={{ color: 'var(--navy-800)', marginBottom: '4px' }}>
           CRYPTOGRAPHIC PROOF ENGINE · v2.6 SPEC
         </div>
-        <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: 'var(--navy-900)' }}>
+        <h1 style={{ margin: 0, fontSize: '1.85rem', fontWeight: 800, color: 'var(--navy-900)', letterSpacing: '-0.02em' }}>
           Onchain Merkle <em>Attestation Verifier</em>
         </h1>
-        <p className="lede" style={{ margin: '3px 0 0 0', color: 'var(--dim)', maxWidth: '780px', fontSize: '0.86rem' }}>
+        <p className="lede" style={{ margin: '6px 0 0 0', color: 'var(--dim)', maxWidth: '820px', fontSize: '0.88rem', lineHeight: 1.55 }}>
           Every frozen research metric is cryptographically hashed with OpenZeppelin StandardMerkleTree and anchored into <strong>WaggleAttestor.sol</strong> on Robinhood Chain. Client-side verification reads roots directly from RPC.
         </p>
       </section>
 
       {/* Control & Attack Simulator Bar */}
-      <section style={{ marginBottom: '10px' }}>
-        <div className="card" style={{
-          padding: '10px 14px',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '10px'
-        }}>
+      <section style={{ marginBottom: '14px' }}>
+        <div className="verify-controls-bar">
           {/* Selectors */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.65rem', textTransform: 'uppercase', fontFamily: 'monospace', color: 'var(--dim)', letterSpacing: '0.05em', marginBottom: '3px', fontWeight: 700 }}>
-                Target Snapshot
-              </label>
+          <div className="verify-controls-left">
+            <div className="verify-input-group">
+              <label>Target Snapshot</label>
               <select
                 value={snapshotId}
                 onChange={(e) => setSnapshotId(e.target.value)}
-                style={{
-                  background: 'var(--gray-50)',
-                  color: 'var(--navy-900)',
-                  border: '1px solid var(--line2)',
-                  borderRadius: '6px',
-                  padding: '4px 8px',
-                  fontSize: '0.8rem',
-                  fontFamily: 'monospace',
-                  fontWeight: 600,
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
+                className="verify-select"
               >
                 <option value="101">Snapshot #101 · Robinhood 92-Day Window</option>
               </select>
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.65rem', textTransform: 'uppercase', fontFamily: 'monospace', color: 'var(--dim)', letterSpacing: '0.05em', marginBottom: '3px', fontWeight: 700 }}>
-                Select Venue Leaf
-              </label>
+            <div className="verify-input-group">
+              <label>Select Venue Leaf</label>
               <select
                 value={venueKey}
                 onChange={(e) => setVenueKey(e.target.value)}
-                style={{
-                  background: 'var(--gray-50)',
-                  color: 'var(--navy-900)',
-                  border: '1px solid var(--line2)',
-                  borderRadius: '6px',
-                  padding: '4px 8px',
-                  fontSize: '0.8rem',
-                  fontFamily: 'monospace',
-                  fontWeight: 600,
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
+                className="verify-select"
               >
                 <option value="pons">Pons (Direct Liquidity AMM)</option>
                 <option value="pools_trade">Pools.trade (Concentrated Pool)</option>
@@ -287,63 +272,27 @@ export default function VerifyPage() {
             <button
               onClick={fetchAndVerify}
               disabled={loading}
-              className="conf"
-              style={{
-                marginTop: '14px',
-                padding: '5px 10px',
-                borderRadius: '6px',
-                background: 'var(--navy-900)',
-                color: '#ffffff',
-                fontSize: '0.75rem',
-                fontFamily: 'monospace',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                cursor: 'pointer',
-                border: 'none',
-                fontWeight: 700
-              }}
+              className="verify-btn-reverify"
             >
-              <RefreshCw size={11} className={loading ? "animate-spin" : ""} />
+              <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
               <span>Re-verify</span>
             </button>
           </div>
 
           {/* Negative Security Test Switch */}
-          <div style={{
-            background: simulateForged ? 'rgba(239, 68, 68, 0.08)' : 'var(--gray-50)',
-            border: `1px solid ${simulateForged ? 'rgba(239, 68, 68, 0.4)' : 'var(--line)'}`,
-            borderRadius: '8px',
-            padding: '6px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            transition: 'all 0.2s ease'
-          }}>
+          <div className={`verify-tamper-box ${simulateForged ? 'tampered' : ''}`}>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: simulateForged ? '#b91c1c' : 'var(--navy-900)' }}>
+              <div className="verify-tamper-title">
                 Tamper Attack Simulator
               </div>
-              <div style={{ fontSize: '0.68rem', color: 'var(--dim)' }}>
-                Inject forged root (`0xdeadbeef...`) to test client rejection
+              <div className="verify-tamper-desc">
+                Inject forged root (&apos;0xdeadbeef...&apos;) to test client rejection
               </div>
             </div>
 
             <button
               onClick={() => setSimulateForged(!simulateForged)}
-              style={{
-                padding: '4px 10px',
-                borderRadius: '5px',
-                fontSize: '0.7rem',
-                fontFamily: 'monospace',
-                fontWeight: 800,
-                border: 'none',
-                cursor: 'pointer',
-                background: simulateForged ? '#ef4444' : 'var(--navy-900)',
-                color: '#ffffff',
-                boxShadow: simulateForged ? '0 0 10px rgba(239, 68, 68, 0.4)' : 'none',
-                transition: 'all 0.2s ease'
-              }}
+              className={`verify-btn-tamper ${simulateForged ? 'active' : ''}`}
             >
               {simulateForged ? 'TAMPERED (ACTIVE)' : 'INJECT FORGERY'}
             </button>
@@ -353,43 +302,38 @@ export default function VerifyPage() {
 
       {/* Dynamic Verification Status Banner */}
       {verificationResult && (
-        <section style={{ marginBottom: '10px' }}>
+        <section style={{ marginBottom: '14px' }}>
           <div
             id="verification-status-banner"
-            style={{
-              borderRadius: '10px',
-              padding: '10px 14px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px',
-              background: verificationResult.verified ? '#ecfdf5' : '#fff1f2',
-              border: `1px solid ${verificationResult.verified ? '#10b981' : '#f43f5e'}`,
-              boxShadow: verificationResult.verified ? '0 2px 10px rgba(16, 185, 129, 0.1)' : '0 2px 10px rgba(244, 63, 94, 0.15)',
-              transition: 'all 0.2s ease'
-            }}
+            className={`verify-status-banner ${verificationResult.verified ? 'status-success' : 'status-danger'}`}
           >
             {verificationResult.verified ? (
-              <CheckCircle2 size={20} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} />
+              <CheckCircle2 size={22} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} />
             ) : (
-              <XCircle size={20} style={{ color: '#e11d48', flexShrink: 0, marginTop: '2px' }} />
+              <XCircle size={22} style={{ color: '#e11d48', flexShrink: 0, marginTop: '2px' }} />
             )}
 
             <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
                 <span className={`conf ${verificationResult.verified ? 'c-high' : 'c-low'}`} style={{
-                  fontSize: '0.76rem',
+                  fontSize: '0.78rem',
                   fontWeight: 800,
                   letterSpacing: '0.04em'
                 }}>
                   {verificationResult.verified ? 'VERIFIED ONCHAIN' : verificationResult.failureReason}
                 </span>
 
-                <span style={{ fontSize: '0.72rem', color: 'var(--dim)' }}>
+                <span style={{ fontSize: '0.74rem', color: 'var(--dim)', fontFamily: 'monospace' }}>
                   Snapshot #{snapshotId} · {proofData?.leaf_details?.venue_key.toUpperCase()}
                 </span>
+                {proofData?.latency_ms && (
+                  <span style={{ fontSize: '0.7rem', color: 'var(--dimmer)', fontFamily: 'monospace' }}>
+                    ({proofData.latency_ms}ms)
+                  </span>
+                )}
               </div>
 
-              <p style={{ margin: 0, fontSize: '0.8rem', color: verificationResult.verified ? '#065f46' : '#9f1239', lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: '0.84rem', color: verificationResult.verified ? '#065f46' : '#9f1239', lineHeight: 1.45 }}>
                 {verificationResult.verified
                   ? "StandardMerkleTree verification passed! The leaf values match the cryptographic root permanently written to WaggleAttestor.sol on Robinhood Chain."
                   : "Cryptographic validation failed! The Merkle Root presented does not match the authoritative root on WaggleAttestor.sol."}
@@ -397,30 +341,25 @@ export default function VerifyPage() {
             </div>
 
             <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '0.62rem', color: 'var(--dim)', fontFamily: 'monospace' }}>Engine</span>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--navy-900)', fontFamily: 'monospace' }}>@openzeppelin/merkle-tree</span>
+              <span style={{ fontSize: '0.64rem', color: 'var(--dim)', fontFamily: 'monospace' }}>Engine</span>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--navy-900)', fontFamily: 'monospace' }}>@openzeppelin/merkle-tree</span>
             </div>
           </div>
         </section>
       )}
 
       {/* 2-Column Core Architecture Cards */}
-      <section style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-        gap: '12px',
-        marginBottom: '10px'
-      }}>
+      <section className="verify-architecture-grid">
         {/* Card 1: Smart Contract Authority */}
-        <div className="card" style={{ padding: '14px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid var(--line)' }}>
+        <div className="verify-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px', borderBottom: '1px solid var(--line)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Database size={15} style={{ color: 'var(--navy-800)' }} />
-              <h3 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 700, color: 'var(--navy-900)' }}>
+              <h3 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 750, color: 'var(--navy-900)' }}>
                 Smart Contract Authority
               </h3>
             </div>
-            <span className="conf c-high" style={{ fontSize: '0.66rem', padding: '1px 5px' }}>
+            <span className="conf c-high" style={{ fontSize: '0.66rem', padding: '1px 6px' }}>
               Immutable Nonce
             </span>
           </div>
@@ -430,7 +369,7 @@ export default function VerifyPage() {
               <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--dim)', textTransform: 'uppercase', marginBottom: '2px', fontWeight: 700 }}>
                 Contract Address (WaggleAttestor.sol):
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--gray-50)', padding: '5px 8px', borderRadius: '5px', border: '1px solid var(--line)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--gray-50)', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--line)' }}>
                 <a
                   href={`https://robinhoodchain.blockscout.com/address/${WAGGLE_ATTESTOR_ADDRESS}`}
                   target="_blank"
@@ -454,7 +393,7 @@ export default function VerifyPage() {
               <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--dim)', textTransform: 'uppercase', marginBottom: '2px', fontWeight: 700 }}>
                 Authoritative Root for Snapshot #{snapshotId}:
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--gray-50)', padding: '6px 8px', borderRadius: '5px', border: '1px solid var(--line)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--gray-50)', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--line)' }}>
                 <span style={{ color: '#059669', wordBreak: 'break-all', fontSize: '0.74rem', fontWeight: 700 }}>
                   {onchainRoot || "Querying smart contract rootOf()..."}
                 </span>
@@ -470,7 +409,7 @@ export default function VerifyPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid var(--line)', fontSize: '0.72rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid var(--line)', fontSize: '0.72rem' }}>
               <span style={{ color: 'var(--dim)' }}>Governance Owner:</span>
               <span style={{ color: 'var(--navy-900)', fontWeight: 600 }}>0xcdc5...ac8a (Safe transition target)</span>
             </div>
@@ -483,22 +422,22 @@ export default function VerifyPage() {
         </div>
 
         {/* Card 2: Canonical Leaf Under Verification */}
-        <div className="card" style={{ padding: '14px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid var(--line)' }}>
+        <div className="verify-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px', borderBottom: '1px solid var(--line)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <FileCode size={15} style={{ color: 'var(--navy-800)' }} />
-              <h3 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 700, color: 'var(--navy-900)' }}>
+              <h3 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 750, color: 'var(--navy-900)' }}>
                 Canonical Leaf Under Verification
               </h3>
             </div>
-            <span className="conf" style={{ fontSize: '0.66rem', padding: '1px 5px', background: 'var(--gray-50)', border: '1px solid var(--line)' }}>
+            <span className="conf" style={{ fontSize: '0.66rem', padding: '1px 6px', background: 'var(--gray-50)', border: '1px solid var(--line)' }}>
               RFC 8785 Fixed-Point
             </span>
           </div>
 
           {proofData ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', background: 'var(--gray-50)', padding: '8px 10px', borderRadius: '5px', border: '1px solid var(--line)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'var(--gray-50)', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--line)' }}>
                 <div>
                   <span style={{ display: 'block', fontSize: '0.6rem', color: 'var(--dim)', textTransform: 'uppercase' }}>VENUE</span>
                   <span style={{ color: 'var(--navy-900)', fontWeight: 700, fontSize: '0.82rem' }}>{proofData.leaf_details?.venue_key.toUpperCase()}</span>
@@ -526,8 +465,8 @@ export default function VerifyPage() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   background: 'var(--gray-50)',
-                  padding: '5px 8px',
-                  borderRadius: '5px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
                   border: `1px solid ${verificationResult?.rootMatchesOnchain ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.5)'}`
                 }}>
                   <span style={{ color: verificationResult?.rootMatchesOnchain ? '#059669' : '#dc2626', wordBreak: 'break-all', fontSize: '0.74rem', fontWeight: 600 }}>
@@ -543,7 +482,7 @@ export default function VerifyPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid var(--line)', fontSize: '0.72rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid var(--line)', fontSize: '0.72rem' }}>
                 <span style={{ color: 'var(--dim)' }}>Dataset Dual Storage:</span>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <a href={proofData.dataset_uri} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>Cloudflare R2 ↗</a>
@@ -553,7 +492,7 @@ export default function VerifyPage() {
               </div>
             </div>
           ) : (
-            <div style={{ padding: '14px 0', textAlign: 'center', color: 'var(--dim)', fontSize: '0.8rem' }}>
+            <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--dim)', fontSize: '0.8rem' }}>
               Fetching proof from API...
             </div>
           )}
@@ -563,11 +502,11 @@ export default function VerifyPage() {
       {/* Visual Merkle Proof Path Pipeline */}
       {proofData && (
         <section>
-          <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div className="verify-proof-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px', borderBottom: '1px solid var(--line)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Layers size={15} style={{ color: 'var(--navy-800)' }} />
-                <h3 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 700, color: 'var(--navy-900)' }}>
+                <Layers size={16} style={{ color: 'var(--navy-800)' }} />
+                <h3 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 750, color: 'var(--navy-900)' }}>
                   Cryptographic Merkle Proof Path ({proofData.proof.length} Sibling Hashes)
                 </h3>
               </div>
@@ -577,15 +516,16 @@ export default function VerifyPage() {
                 style={{
                   background: 'var(--panel)',
                   border: '1px solid var(--line2)',
-                  color: 'var(--dim)',
-                  padding: '2px 7px',
-                  borderRadius: '4px',
+                  color: 'var(--navy-900)',
+                  padding: '3px 8px',
+                  borderRadius: '5px',
                   fontSize: '0.68rem',
                   fontFamily: 'monospace',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  gap: '5px',
+                  fontWeight: 600
                 }}
               >
                 <Code size={11} />
@@ -594,41 +534,28 @@ export default function VerifyPage() {
             </div>
 
             {showJsonRaw && (
-              <div style={{ background: 'var(--gray-50)', padding: '8px 10px', borderRadius: '5px', border: '1px solid var(--line)', marginBottom: '8px' }}>
-                <div style={{ fontSize: '0.65rem', color: 'var(--dim)', fontFamily: 'monospace', marginBottom: '3px', fontWeight: 700 }}>
+              <div style={{ background: 'var(--gray-50)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}>
+                <div style={{ fontSize: '0.65rem', color: 'var(--dim)', fontFamily: 'monospace', marginBottom: '4px', fontWeight: 700 }}>
                   CANONICAL LEAF TUPLE (PASSED TO KECCAK256 DOUBLE HASH):
                 </div>
-                <pre style={{ margin: 0, fontSize: '0.7rem', color: 'var(--navy-900)', overflowX: 'auto', fontFamily: 'monospace' }}>
+                <pre style={{ margin: 0, fontSize: '0.72rem', color: 'var(--navy-900)', overflowX: 'auto', fontFamily: 'monospace', lineHeight: 1.5 }}>
                   {JSON.stringify(proofData.leaf_tuple, null, 2)}
                 </pre>
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {proofData.proof.map((hash, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: 'var(--gray-50)',
-                    padding: '5px 8px',
-                    borderRadius: '5px',
-                    border: '1px solid var(--line)',
-                    fontSize: '0.74rem',
-                    fontFamily: 'monospace'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div key={idx} className="verify-step-row">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span className="conf" style={{
-                      padding: '1px 4px',
-                      borderRadius: '3px',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
                       background: 'var(--panel)',
                       border: '1px solid var(--line)',
                       color: 'var(--navy-900)',
-                      fontSize: '0.62rem',
-                      fontWeight: 700
+                      fontSize: '0.65rem',
+                      fontWeight: 750
                     }}>
                       Step {idx + 1}
                     </span>
@@ -647,6 +574,23 @@ export default function VerifyPage() {
           </div>
         </section>
       )}
+
+      {/* Verification Engine Footer with Disclosures */}
+      <footer style={{ marginTop: '56px', paddingTop: '24px', paddingBottom: '24px', borderTop: '1px solid var(--line)', textAlign: 'center', fontSize: '0.78rem', color: 'var(--dim)' }}>
+        <p style={{ margin: '0 0 6px' }}>
+          Robinhood Chain (Chain ID: 4663) · WaggleAttestor Cryptographic Verification Engine v2.6
+        </p>
+        <p style={{ margin: '0 0 10px' }}>
+          Authoritative Contract: <a href={`https://robinhoodchain.blockscout.com/address/${WAGGLE_ATTESTOR_ADDRESS}`} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>{WAGGLE_ATTESTOR_ADDRESS}</a>
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
+          <Link href="/" style={{ color: '#2563eb' }}>Scout Engine</Link>
+          <Link href="/robinhood" style={{ color: '#2563eb' }}>Robinhood Hub</Link>
+          <Link href="/method" style={{ color: '#2563eb' }}>Methodology</Link>
+          <Link href="/terms" style={{ color: '#2563eb' }}>Terms</Link>
+          <Link href="/privacy" style={{ color: '#2563eb' }}>Privacy</Link>
+        </div>
+      </footer>
 
     </main>
   );

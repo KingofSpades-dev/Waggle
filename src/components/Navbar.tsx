@@ -41,7 +41,7 @@ export default function Navbar() {
           <Link href="/#venues">
             launchpads
           </Link>
-          <Link href="/#method" className={isMethod ? 'active' : ''}>
+          <Link href="/method" className={isMethod ? 'active' : ''}>
             method
           </Link>
           <Link href="/coverage" className={isCoverage ? 'active' : ''}>
@@ -97,7 +97,7 @@ export default function Navbar() {
               <span className="m-icon">🚀</span> launchpads
             </Link>
             <Link
-              href="/#method"
+              href="/method"
               className={isMethod ? 'active' : ''}
               onClick={() => setMobileMenuOpen(false)}
             >
