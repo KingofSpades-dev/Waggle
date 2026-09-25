@@ -1,0 +1,50 @@
+{
+  "$schema": "https://wagglecell.tech/schemas/leaves-v3.json",
+  "version": 3,
+  "description": "Shared test vector file for Leaf Format v3 encoding between TypeScript attestation pipeline and Rust waggle-score guest crate.",
+  "vectors": [
+    {
+      "leafType": 0,
+      "name": "snapshot_header_105",
+      "fields": {
+        "typeId": 0,
+        "snapshotId": 105,
+        "metricsVersion": 3,
+        "chainCount": 1
+      },
+      "abiTypes": ["uint8", "uint64", "uint32", "uint32"],
+      "abiValues": [0, 105, 3, 1]
+    },
+    {
+      "leafType": 1,
+      "name": "chain_header_robinhood_4663",
+      "fields": {
+        "typeId": 1,
+        "snapshotId": 105,
+        "chainIndex": 0,
+        "chainId": 4663,
+        "venueCount": 2
+      },
+      "abiTypes": ["uint8", "uint64", "uint32", "uint64", "uint32"],
+      "abiValues": [1, 105, 0, 4663, 2]
+    },
+    {
+      "leafType": 2,
+      "name": "venue_row_aerodrome_v1",
+      "fields": {
+        "typeId": 2,
+        "snapshotId": 105,
+        "chainId": 4663,
+        "venueIndex": 0,
+        "venueId": 101,
+        "survivalRateBps": 8500,
+        "medianLiqUsdCents": 15000000,
+        "extractionBps": 1200,
+        "volumeAdjUsdCents": 500000000,
+        "hourlyActivityBps": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400]
+      },
+      "abiTypes": ["uint8", "uint64", "uint64", "uint32", "uint32", "uint32", "uint64", "uint32", "uint64", "uint32[24]"],
+      "abiValues": [2, 105, 4663, 0, 101, 8500, 15000000, 1200, 500000000, [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400]]
+    }
+  ]
+}

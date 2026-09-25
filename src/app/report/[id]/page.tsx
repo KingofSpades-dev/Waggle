@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ShieldCheck, ExternalLink, FileCode } from 'lucide-react';
+import { ShieldCheck, ExternalLink, FileCode, Lock } from 'lucide-react';
 import { WAGGLE_ATTESTOR_ADDRESS } from '@/lib/viemClient';
 import { scoutProject } from '@/lib/scorer';
 import { CHAINS } from '@/lib/mockData';
@@ -50,6 +50,21 @@ export default async function ReportPermalinkPage({
           >
             <ShieldCheck size={13} />
             <span>Verify Receipt Onchain ↗</span>
+          </Link>
+          <span>·</span>
+          <Link
+            href="/proof/0x8f3c9b1a"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: '0.72rem',
+              color: '#059669',
+              textDecoration: 'none',
+              fontWeight: 700
+            }}
+          >
+            <span>Private Proof Disclosure 🔒</span>
           </Link>
         </div>
 
@@ -214,6 +229,69 @@ export default async function ReportPermalinkPage({
               )}
             </div>
           )}
+
+          {/* Dedicated Zero Knowledge Proof & Privacy Card */}
+          <div style={{
+            marginTop: 20,
+            padding: '20px 24px',
+            background: 'linear-gradient(135deg, rgba(39, 56, 105, 0.04) 0%, rgba(16, 185, 129, 0.08) 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.35)',
+            borderRadius: 'var(--r-md)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <ShieldCheck size={18} style={{ color: '#059669' }} />
+                <span style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--navy-900)' }}>
+                  Zero Knowledge Proof & Privacy Options
+                </span>
+                <span style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  padding: '2px 8px',
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  color: '#047857',
+                  borderRadius: '4px',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em'
+                }}>
+                  MODE_PRIVATE READY
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--dim)', maxWidth: '640px', lineHeight: 1.5 }}>
+                This report can be cryptographically proven onchain via SP1 Groth16 zkVM on Robinhood Chain (4663). Project creators can disclose selective statements without revealing project identity or salt.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <Link
+                href={`/proof/${id}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 18px',
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: '#ffffff',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 14px rgba(5, 150, 105, 0.3)',
+                  transition: 'transform 0.15s ease, boxShadow 0.15s ease'
+                }}
+              >
+                <Lock size={14} />
+                <span>View Private Proof Disclosure 🔒 ↗</span>
+              </Link>
+            </div>
+          </div>
 
           <div className="cellinfo" style={{ marginTop: 16 }}>
             <b>Version Lineage & Provenance</b>

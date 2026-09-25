@@ -587,6 +587,75 @@ export default function HomePage() {
                 </div>
               )}
 
+              {/* Dedicated Zero Knowledge Proof & Privacy Options Card */}
+              <div style={{
+                marginTop: 20,
+                padding: '20px 24px',
+                background: 'linear-gradient(135deg, rgba(39, 56, 105, 0.04) 0%, rgba(16, 185, 129, 0.08) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                borderRadius: 'var(--r-md)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '16px',
+                boxShadow: 'var(--shadow-sm)'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.2">
+                      <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" />
+                      <path d="M9 12l2 2 4-4" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--navy-900)' }}>
+                      Zero Knowledge Proof & Privacy Options
+                    </span>
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 800,
+                      padding: '2px 8px',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      color: '#047857',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em'
+                    }}>
+                      MODE_PRIVATE READY
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--dim)', maxWidth: '640px', lineHeight: 1.5 }}>
+                    This report can be cryptographically proven onchain via SP1 Groth16 zkVM on Robinhood Chain (4663). Project creators can disclose selective statements without revealing project identity or salt.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <Link
+                    href={`/proof/${report.version_metadata?.snapshot_id ? (report.version_metadata.snapshot_id.startsWith('0x') ? report.version_metadata.snapshot_id : `0x${report.version_metadata.snapshot_id}`) : '0x8f3c9b1a'}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '9px 18px',
+                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      color: '#ffffff',
+                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontSize: '0.84rem',
+                      textDecoration: 'none',
+                      boxShadow: '0 4px 14px rgba(5, 150, 105, 0.3)',
+                      transition: 'transform 0.15s ease, boxShadow 0.15s ease'
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span>View Private Proof Disclosure 🔒 ↗</span>
+                  </Link>
+                </div>
+              </div>
+
               <p className="caveat">
                 {report.confidence_caveat} {report.disclaimer}
               </p>

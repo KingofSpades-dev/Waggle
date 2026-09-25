@@ -1,0 +1,11 @@
+[package]
+name = "waggle-aggregate-guest"
+version = "3.1.0"
+edition = "2021"
+
+[dependencies]
+sp1-zkvm = { version = "4.0.0", features = ["verify"] }
+waggle-score = { path = "../../crates/waggle-score" }
+alloy-primitives = { version = "0.8", default-features = false }
+alloy-sol-types = { version = "0.8", default-features = false }
+sha2 = "0.10"

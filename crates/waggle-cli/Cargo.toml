@@ -1,0 +1,13 @@
+[package]
+name = "waggle-cli"
+version = "3.1.0"
+edition = "2021"
+authors = ["Waggle Core Engineering Team"]
+description = "Standalone open-source verifier and local proof generator CLI for Waggle v3"
+
+[dependencies]
+waggle-score = { path = "../waggle-score" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+alloy-primitives = "0.8"
+alloy-sol-types = "0.8"

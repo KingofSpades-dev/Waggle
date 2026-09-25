@@ -198,6 +198,28 @@ export default function VerifyPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link
+            href="/proof/0x8f3c9b1a"
+            style={{
+              fontSize: '0.74rem',
+              padding: '4px 12px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.5)',
+              borderRadius: '8px',
+              color: '#047857',
+              textDecoration: 'none',
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 6px rgba(16, 185, 129, 0.15)',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease, boxShadow 0.15s ease'
+            }}
+          >
+            <ShieldCheck size={14} style={{ color: '#059669' }} />
+            <span>View Private Proof Disclosure 🔒 ↗</span>
+          </Link>
           <span style={{
             fontSize: '0.72rem',
             padding: '2px 8px',

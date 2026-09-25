@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import WalletConnectModal from '@/components/WalletConnectModal';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -53,13 +52,33 @@ export default function Navbar() {
           <Link href="/verify" className={pathname === '/verify' ? 'active' : ''}>
             verify
           </Link>
+          <a
+            href="https://x.com/wagglescout"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="X / Twitter @wagglescout"
+            style={{
+              color: 'var(--navy-800)',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: '1px solid var(--line)'
+            }}
+            title="Follow @wagglescout on X"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+            <span>@wagglescout</span>
+          </a>
         </span>
 
-        {/* RainbowKit / Web3 Wallet Connect */}
+        {/* Mobile Hamburger Toggle Button Container */}
         <div className="nav-wallet-wrap" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <WalletConnectModal />
-
-          {/* Mobile Hamburger Toggle Button */}
           <button
             className="hamburger-btn"
             onClick={() => setMobileMenuOpen(prev => !prev)}
@@ -124,6 +143,14 @@ export default function Navbar() {
             >
               <span className="m-icon">🛡️</span> verify
             </Link>
+            <a
+              href="https://x.com/wagglescout"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="m-icon">𝕏</span> @wagglescout
+            </a>
           </div>
         </div>
       )}
